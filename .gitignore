@@ -1,0 +1,12 @@
+# installation related file
+build/
+dist/
+*.egg-info
+
+# Too large
+Datasets/
+
+# virtual environment
+venv_ip_impl
+
+__pycache__/
