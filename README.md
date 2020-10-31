@@ -9,6 +9,7 @@
 ## Next Step
 
   - Build network
+  - Combine exr location labels with jpeg intensity labels
 
 ## Setup Tutorial
 
