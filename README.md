@@ -5,10 +5,10 @@
 ## Current Progress
 
   - Finished Lableling jpeg images and exr files separately
+  - Build network
 
 ## Next Step
 
-  - Build network
   - Combine exr location labels with jpeg intensity labels
 
 ## Setup Tutorial
@@ -21,8 +21,9 @@ Note that the setup would also be applicable for the project. The steps would be
  - Python3.7
  - pytorch
  - numpy
+ - opencv
 
-### Steps
+### Steps for pytorch tutorial
 
   - See this [link](https://docs.anaconda.com/anaconda/install/windows/). Remeber to add Anaconda to my Path
   - Create virtual environment under the project directory using `conda create --prefix ./venv python=3.7`
