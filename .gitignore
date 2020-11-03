@@ -2,11 +2,13 @@
 build/
 dist/
 *.egg-info
+.vscode/
 
 # Too large
 Datasets/
 
 # virtual environment
 venv_ip_impl
+venv/
 
 __pycache__/
