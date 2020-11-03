@@ -94,13 +94,12 @@ class JPGLabeler():
             cv2.CHAIN_APPROX_SIMPLE)
             cnts = imutils.grab_contours(cnts)
             cnts = contours.sort_contours(cnts)[0]
-
+            
             # loop over the contours
             for (i, c) in enumerate(cnts):
-
+                
                 # draw the bright spot on the image
-                # rect = cv2.minAreaRect(c)
-                # elp = cv2.ellipse(img, rect, color = (255, 0, 0), thickness=2)
+                rect = cv2.minAreaRect(c)
                 x, y = rect[0]
                 
                 r, g, b =np.divide(np.sum(img[mask == 255], axis=(0)), \
@@ -123,7 +122,7 @@ class JPGLabeler():
             for (i, c) in enumerate(cnts):
                 # draw the bright spot on the image
                 rect = cv2.minAreaRect(c)
-                elp = cv2.ellipse(img, rect, color = (255, 0, 0), thickness=2)
+                elp = cv2.ellipse(img, rect, color = (0, 0, 255), thickness=2)
 
         return img
 
@@ -234,6 +233,8 @@ class EXRLabeler():
 
             # loop over the contours
             for (i, c) in enumerate(cnts):
+                # find a rectangle (ellipse)
+                rect = cv2.minAreaRect(c)
                 x, y = rect[0]
                 
                 r, g, b =np.divide(np.sum(img[mask == 255], axis=(0)), \
