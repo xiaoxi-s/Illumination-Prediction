@@ -12,16 +12,18 @@ from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler
 from torchvision import transforms
 
-from loss import average_difference_loss
+from loss import average_difference_loss, location_success_count
 from network import IlluminationPredictionNet
 from dataset import EnvironmentJPGDataset
 
 
 def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
-    global dataloader
+    global train_dataloader
+    global test_dataloader
+
     since = time.time()
 
-    best_model_wts = copy.deepcopy(model.state_dict())
+    best_model_wts = None
     best_acc = 0.0
 
     device = torch.device('cuda' if torch.cuda.is_available() else ('cpu'))
@@ -35,13 +37,16 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
         for phase in ['train']:
             if phase == 'train':
                 model.train()  # Set model to training mode
+                dataloader = train_dataloader
             else:
                 model.eval()   # Set model to evaluate mode
+                dataloader = test_dataloader
 
             running_loss = 0.0
             running_corrects = 0
 
             # Iterate over data.
+
             for (i, data) in enumerate(dataloader):
                 inputs = data['images'].to(device)
                 labels = data['labels'].to(device)
@@ -55,6 +60,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
                     outputs = model(inputs)
                     outputs = torch.reshape(outputs, (-1, 3, 9))
                     loss = criterion(outputs, labels)
+                    running_corrects += location_success_count(outputs, labels)
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
@@ -67,27 +73,40 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
                 scheduler.step()
 
             epoch_loss = running_loss / len(dataloader)
+            epoch_acc = running_corrects / len(dataloader)
 
-            print('{} Loss: {:.4f}'.format(
-                phase, epoch_loss))
+            print('{} Loss: {:.4f} Acc: {:.4f}'.format(
+                phase, epoch_loss, epoch_acc))
 
+            if epoch_acc > best_acc and phase == 'validation':
+                best_model_wts = copy.deepcopy(model)
+                best_acc = acc
+    
         print()
     
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
 
-    torch.save(model, os.path.join('checkpoint','naive_model' + datetime.now().strftime("_%H:%M:%S_%d-%m-%Y")))
+    if best_model_wts is None:
+        raise TypeError("Accuracy Metric is Invalid")
+
+    torch.save(best_model_wts, os.path.join('checkpoint','naive_model' + datetime.now().strftime("_%H:%M:%S_%d-%m-%Y")))
     # load best model weights
 
     return model
 
 
 if __name__ == '__main__':
-    ds = EnvironmentJPGDataset(os.path.join('data', 'labeled_images.npy'), os.path.join('data', 'labels.npy'),\
+    train_ds = EnvironmentJPGDataset(os.path.join('data', 'train_feature_matrix.npy'), os.path.join('data', 'train_label.npy'),\
         transform= transforms.Compose([transformer.Rescale((224, 224)),
                                        transformer.ToTensor()]))
-    dataloader = DataLoader(ds, 1)
+    test_ds = EnvironmentJPGDataset(os.path.join('data', 'test_feature_matrix.npy'), os.path.join('data', 'test_label.npy'),\
+        transform= transforms.Compose([transformer.Rescale((224, 224)),
+                                       transformer.ToTensor()]))
+
+    train_dataloader = DataLoader(train_ds, 1)
+    test_dataloader = DataLoader(test_ds, 1)
 
     model = IlluminationPredictionNet()
     model.double()
