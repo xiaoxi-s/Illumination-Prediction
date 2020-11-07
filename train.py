@@ -7,6 +7,7 @@ import torch.optim as optim
 
 import transformer
 
+from datetime import datetime
 from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler
 from torchvision import transforms
@@ -52,8 +53,8 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs = model(inputs)
-                    _, preds = torch.max(outputs, 1)
-                    loss = criterion(outputs[0], labels[0])
+                    outputs = torch.reshape(outputs, (-1, 3, 9))
+                    loss = criterion(outputs, labels)
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
@@ -62,30 +63,23 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
-                running_corrects += torch.sum(preds == labels.data)
             if phase == 'train':
                 scheduler.step()
 
             epoch_loss = running_loss / len(dataloader)
-            epoch_acc = running_corrects.double() / len(dataloader)
 
-            print('{} Loss: {:.4f} Acc: {:.4f}'.format(
-                phase, epoch_loss, epoch_acc))
-
-            # deep copy the model
-            if phase == 'val' and epoch_acc > best_acc:
-                best_acc = epoch_acc
-                best_model_wts = copy.deepcopy(model.state_dict())
+            print('{} Loss: {:.4f}'.format(
+                phase, epoch_loss))
 
         print()
-
+    
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
-    print('Best val Acc: {:4f}'.format(best_acc))
 
+    torch.save(model, os.path.join('checkpoint','naive_model' + datetime.now().strftime("_%H:%M:%S_%d-%m-%Y")))
     # load best model weights
-    model.load_state_dict(best_model_wts)
+
     return model
 
 
@@ -98,6 +92,6 @@ if __name__ == '__main__':
     model = IlluminationPredictionNet()
     model.double()
 
-    optimizer = optim.SGD(model.parameters(), lr=0.00001, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=0.0001, momentum=0.9)
     scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-    model = train_model(model, average_difference_loss, optimizer, scheduler)
+    model = train_model(model, average_difference_loss, optimizer, scheduler, 25)

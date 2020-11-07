@@ -9,7 +9,7 @@
 
 ## Next Step
 
-  - Combine exr location labels with jpeg intensity labels
+  - Train Network
 
 ## Setup Tutorial
 

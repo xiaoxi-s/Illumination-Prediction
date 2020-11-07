@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     # store images in different dirs based on format
     dest_path = os.path.join('data', img_format + '_sample')
-    if os.path.isdir(dest_path):
+    if not os.path.isdir(dest_path):
         os.mkdir(dest_path)
 
     file_ind = 1
