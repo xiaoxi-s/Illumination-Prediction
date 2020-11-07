@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -333,8 +334,23 @@ class DataGenerator():
         # num of X == num of Y
         assert labels.shape[0] == labeled_images.shape[0]
 
-        np.save(os.path.join(dest_path, 'labeled_images.npy'), labeled_images, allow_pickle=True)
-        np.save(os.path.join(dest_path, 'labels.npy'), labels, allow_pickle=True)
+        # ratio of test sample
+        ratio = 0.2
+        num_of_samples = labeled_images.shape[0]
+        num_of_test_samples = int(ratio * num_of_samples)
+        num_of_train_samples = int(num_of_samples - num_of_test_samples)
+
+        train_matrix = labeled_images[0:num_of_train_samples]
+        train_labels = labels[0:num_of_train_samples]
+
+        test_matrix = labeled_images[num_of_train_samples:-1]
+        test_labels = labels[num_of_train_samples:-1]
+
+        np.save(os.path.join(dest_path, 'train_feature_matrix.npy'), train_matrix, allow_pickle=True)
+        np.save(os.path.join(dest_path, 'train_label.npy'), train_labels, allow_pickle=True)
+
+        np.save(os.path.join(dest_path, 'test_feature_matrix.npy'), test_matrix, allow_pickle=True)
+        np.save(os.path.join(dest_path, 'test_label.npy'), test_labels, allow_pickle=True)
 
 # test
 if __name__ == '__main__':
