@@ -34,7 +34,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
         print('-' * 10)
 
         # Each epoch has a training and validation phase
-        for phase in ['train']:
+        for phase in ['train', 'validation']:
             if phase == 'train':
                 model.train()  # Set model to training mode
                 dataloader = train_dataloader
@@ -80,7 +80,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 
             if epoch_acc > best_acc and phase == 'validation':
                 best_model_wts = copy.deepcopy(model)
-                best_acc = acc
+                best_acc = epoch_acc
     
         print()
     
@@ -92,9 +92,8 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
         raise TypeError("Accuracy Metric is Invalid")
 
     torch.save(best_model_wts, os.path.join('checkpoint','naive_model' + datetime.now().strftime("_%H:%M:%S_%d-%m-%Y")))
-    # load best model weights
 
-    return model
+    return best_model_wts
 
 
 if __name__ == '__main__':
@@ -113,4 +112,4 @@ if __name__ == '__main__':
 
     optimizer = optim.SGD(model.parameters(), lr=0.0001, momentum=0.9)
     scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-    model = train_model(model, average_difference_loss, optimizer, scheduler, 25)
+    model = train_model(model, average_difference_loss, optimizer, scheduler, 225)
