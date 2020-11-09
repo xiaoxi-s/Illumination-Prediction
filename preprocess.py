@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -94,13 +95,12 @@ class JPGLabeler():
             cv2.CHAIN_APPROX_SIMPLE)
             cnts = imutils.grab_contours(cnts)
             cnts = contours.sort_contours(cnts)[0]
-
+            
             # loop over the contours
             for (i, c) in enumerate(cnts):
-
+                
                 # draw the bright spot on the image
-                # rect = cv2.minAreaRect(c)
-                # elp = cv2.ellipse(img, rect, color = (255, 0, 0), thickness=2)
+                rect = cv2.minAreaRect(c)
                 x, y = rect[0]
                 
                 r, g, b =np.divide(np.sum(img[mask == 255], axis=(0)), \
@@ -123,7 +123,7 @@ class JPGLabeler():
             for (i, c) in enumerate(cnts):
                 # draw the bright spot on the image
                 rect = cv2.minAreaRect(c)
-                elp = cv2.ellipse(img, rect, color = (255, 0, 0), thickness=2)
+                elp = cv2.ellipse(img, rect, color = (0, 0, 255), thickness=2)
 
         return img
 
@@ -234,6 +234,8 @@ class EXRLabeler():
 
             # loop over the contours
             for (i, c) in enumerate(cnts):
+                # find a rectangle (ellipse)
+                rect = cv2.minAreaRect(c)
                 x, y = rect[0]
                 
                 r, g, b =np.divide(np.sum(img[mask == 255], axis=(0)), \
@@ -284,6 +286,71 @@ class EXRLabeler():
         label = self._label_img(masks, img)
         return label
 
+
+class DataGenerator():
+    def __init__(self):
+        pass
+
+    def generate_feature_and_label(self, source_path, dest_path, img_format='jpg'):
+        img_format = str.lower(img_format)
+        if img_format == 'jpg' or img_format == 'jpeg':
+            labeler = JPGLabeler()
+        elif img_format == 'exr':
+            labeler = EXRLabeler()
+        
+        img_names = os.listdir(os.path.join(source_path))
+        discarded_data_set = set()
+        img_names.sort()
+        label_dict = dict()
+        
+        img_index = 0
+        
+        labeled_images = []
+        labels = []
+
+        # generate labels
+        for img_name in img_names:
+            img = cv2.imread(os.path.join(source_path, img_name))
+            label = labeler.generate_labels(img)
+
+            if label is None:
+                discarded_data_set.add(img_name)
+                continue
+
+            # label_dict[img_index] = label
+
+            labels.append(label)
+            labeled_images.append(img)
+
+            img_index += 1
+
+        # store labeled images
+        # with open(os.path.join(label_path, 'labels.txt'), 'w') as f:
+        #    f.write(json.dumps(label_dict))
+
+        labeled_images = np.array(labeled_images)
+        labels = np.array(labels, dtype='float64')
+
+        # num of X == num of Y
+        assert labels.shape[0] == labeled_images.shape[0]
+
+        # ratio of test sample
+        ratio = 0.2
+        num_of_samples = labeled_images.shape[0]
+        num_of_test_samples = int(ratio * num_of_samples)
+        num_of_train_samples = int(num_of_samples - num_of_test_samples)
+
+        train_matrix = labeled_images[0:num_of_train_samples]
+        train_labels = labels[0:num_of_train_samples]
+
+        test_matrix = labeled_images[num_of_train_samples:-1]
+        test_labels = labels[num_of_train_samples:-1]
+
+        np.save(os.path.join(dest_path, 'train_feature_matrix.npy'), train_matrix, allow_pickle=True)
+        np.save(os.path.join(dest_path, 'train_label.npy'), train_labels, allow_pickle=True)
+
+        np.save(os.path.join(dest_path, 'test_feature_matrix.npy'), test_matrix, allow_pickle=True)
+        np.save(os.path.join(dest_path, 'test_label.npy'), test_labels, allow_pickle=True)
 
 # test
 if __name__ == '__main__':
