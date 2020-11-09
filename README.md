@@ -1,5 +1,16 @@
 # Illumination-Prediction
 
+# Description
+
+## Current Progress
+
+  - Finished Lableling jpeg images and exr files separately
+  - Build network
+
+## Next Step
+
+  - Combine exr location labels with jpeg intensity labels
+
 ## Setup Tutorial
 
 Note that the setup would also be applicable for the project. The steps would be generally the same. 
@@ -9,8 +20,10 @@ Note that the setup would also be applicable for the project. The steps would be
  - conda
  - Python3.7
  - pytorch
+ - numpy
+ - opencv
 
-### Steps
+### Steps for pytorch tutorial
 
   - See this [link](https://docs.anaconda.com/anaconda/install/windows/). Remeber to add Anaconda to my Path
   - Create virtual environment under the project directory using `conda create --prefix ./venv python=3.7`
@@ -19,6 +32,7 @@ Note that the setup would also be applicable for the project. The steps would be
   - Build your Convolutional Neural Network according to this [tutorial](https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html)
   - Done! 
 
-## Reproduce Paper
+# Acknowledgment
 
-The paper being reproduced is [this](https://arxiv.org/abs/1806.03994). The code is modeled after the authors' implementation.
+  - General Idea: see this [website](https://lvsn.github.io/deepparametric/)
+  - Dataset: [The Laval Indoor HDR Dataset](http://indoor.hdrdb.com/)

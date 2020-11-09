@@ -10,5 +10,15 @@ Datasets/
 # virtual environment
 venv_ip_impl
 venv/
+=======
+# all data is not ignored
+data/
+annotated_examples/
 
+# virtual environment
+venv_open_exr/
+
+# pycache
 __pycache__/
+
+

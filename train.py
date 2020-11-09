@@ -1,82 +1,103 @@
-import sys
+import time
 import os
-from torch import optim
-from torch.utils import data
-from AutoEncoder.network import AutoEncoderNet
-from AutoEncoder.loader import AutoEncoderDataset
-from tools.utils import yaml_load, DictAsMember, load_from_file
-from tools.hdr_image import HDRImageHandler
+import copy
+import data
+import torch
+import torch.optim as optim
 
-# from AutoEncoder.callback import AutoEncoderCallback
+import transformer
+
+from torch.utils.data import DataLoader
+from torch.optim import lr_scheduler
+from torchvision import transforms
+
+from loss import average_difference_loss
+from network import IlluminationPredictionNet
+from dataset import EnvironmentJPGDataset
+
+
+def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
+    global dataloader
+    since = time.time()
+
+    best_model_wts = copy.deepcopy(model.state_dict())
+    best_acc = 0.0
+
+    device = torch.device('cuda' if torch.cuda.is_available() else ('cpu'))
+    model.to(device)
+    
+    for epoch in range(num_epochs):
+        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
+        print('-' * 10)
+
+        # Each epoch has a training and validation phase
+        for phase in ['train']:
+            if phase == 'train':
+                model.train()  # Set model to training mode
+            else:
+                model.eval()   # Set model to evaluate mode
+
+            running_loss = 0.0
+            running_corrects = 0
+
+            # Iterate over data.
+            for (i, data) in enumerate(dataloader):
+                inputs = data['images'].to(device)
+                labels = data['labels'].to(device)
+
+                # zero the parameter gradients
+                optimizer.zero_grad()
+
+                # forward
+                # track history if only in train
+                with torch.set_grad_enabled(phase == 'train'):
+                    outputs = model(inputs)
+                    _, preds = torch.max(outputs, 1)
+                    loss = criterion(outputs[0], labels[0])
+
+                    # backward + optimize only if in training phase
+                    if phase == 'train':
+                        loss.backward()
+                        optimizer.step()
+
+                # statistics
+                running_loss += loss.item() * inputs.size(0)
+                running_corrects += torch.sum(preds == labels.data)
+            if phase == 'train':
+                scheduler.step()
+
+            epoch_loss = running_loss / len(dataloader)
+            epoch_acc = running_corrects.double() / len(dataloader)
+
+            print('{} Loss: {:.4f} Acc: {:.4f}'.format(
+                phase, epoch_loss, epoch_acc))
+
+            # deep copy the model
+            if phase == 'val' and epoch_acc > best_acc:
+                best_acc = epoch_acc
+                best_model_wts = copy.deepcopy(model.state_dict())
+
+        print()
+
+    time_elapsed = time.time() - since
+    print('Training complete in {:.0f}m {:.0f}s'.format(
+        time_elapsed // 60, time_elapsed % 60))
+    print('Best val Acc: {:4f}'.format(best_acc))
+
+    # load best model weights
+    model.load_state_dict(best_model_wts)
+    return model
+
 
 if __name__ == '__main__':
-    #
-    #   Load configurations
-    #
-    try:
-        config_path = sys.argv[1]
-    except IndexError:
-        config_path = "AutoEncoder/train.yml"
-    opt = DictAsMember(yaml_load(config_path))
+    ds = EnvironmentJPGDataset(os.path.join('data', 'labeled_images.npy'), os.path.join('data', 'labels.npy'),\
+        transform= transforms.Compose([transformer.Rescale((224, 224)),
+                                       transformer.ToTensor()]))
+    dataloader = DataLoader(ds, 1)
 
-    #
-    #   Instantiate models
-    #
-    # model = load_from_file(opt.network, 'AutoEncoderNet')
-    model = AutoEncoderNet()
-    #
-    #   Instantiate loaders
-    #
-    hdr_image_handler = HDRImageHandler(opt.hdr_mean_std, perform_scale_perturbation=True)
-    train_dataset = AutoEncoderDataset(os.path.join(opt.data_path, "train"),
-                                       transform=hdr_image_handler.normalization_ops)
+    model = IlluminationPredictionNet()
+    model.double()
 
-    valid_dataset = AutoEncoderDataset(os.path.join(opt.data_path, "valid"),
-                                       transform=hdr_image_handler.normalization_ops)
-
-    train_loader = data.DataLoader(train_dataset,
-                                   batch_size=opt.batch_size,
-                                   num_workers=opt.workers,
-                                   pin_memory=opt.use_shared_memory,
-                                   drop_last=True)
-
-    valid_loader = data.DataLoader(valid_dataset,
-                                   batch_size=opt.batch_size,
-                                   num_workers=opt.workers,
-                                   pin_memory=opt.use_shared_memory)
-    
-    if opt.optimizer == 'Adam':
-        optimizer = optim.Adam(model.parameters(), lr=opt.learning_rate, weight_decay=1e-5)
-    else:
-        optimizer = optim.SGD(model.parameters(), lr=opt.learning_rate, momentum=0.9)
-    
-    running_loss = 0
-    dataiter = iter(train_loader)
-
-    epoch = 100
-    for e in range(epoch):
-        running_loss = 0
-        for i, data in enumerate(train_loader, 0):
-            inputs, labels = data
-            
-            optimizer.zero_grad()
-
-            outputs = model(inputs)
-            loss = model.loss(outputs, labels)
-
-            loss.backgward()
-
-            optimizer.step()
-
-            running_loss += loss.item()
-
-            if i % 2000 == 1999:    # print every 2000 mini-batches
-                print('[%d, %5d] loss: %.3f' %
-                    (e + 1, i + 1, running_loss / 2000))
-                running_loss = 0.0
-
-
-
-
-    
-
+    optimizer = optim.SGD(model.parameters(), lr=0.00001, momentum=0.9)
+    scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+    model = train_model(model, average_difference_loss, optimizer, scheduler)
