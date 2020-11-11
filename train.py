@@ -12,8 +12,8 @@ from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler
 from torchvision import transforms
 
-from loss import average_difference_loss, location_success_count
-from network import IlluminationPredictionNet
+from model.loss import average_difference_loss, location_success_count
+from model.network import IlluminationPredictionNet
 from dataset import EnvironmentJPGDataset
 
 
@@ -111,5 +111,5 @@ if __name__ == '__main__':
     model.double()
 
     optimizer = optim.SGD(model.parameters(), lr=0.0001, momentum=0.9)
-    scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+    scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.01)
     model = train_model(model, average_difference_loss, optimizer, scheduler, 225)
