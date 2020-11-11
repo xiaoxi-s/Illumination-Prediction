@@ -5,7 +5,7 @@ import data
 import torch
 import torch.optim as optim
 
-import transformer
+import dataset.transformer as transformer
 
 from datetime import datetime
 from torch.utils.data import DataLoader
@@ -14,7 +14,7 @@ from torchvision import transforms
 
 from model.loss import average_difference_loss, location_success_count
 from model.network import IlluminationPredictionNet
-from dataset import EnvironmentJPGDataset
+from dataset.dataset import EnvironmentJPGDataset
 
 
 def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
