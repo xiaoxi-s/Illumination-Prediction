@@ -1,9 +1,12 @@
 import os
 import cv2
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import imutils
+
+from scipy.interpolate import interp2d
 from functools import cmp_to_key
 
 from imutils import contours
@@ -351,6 +354,80 @@ class DataGenerator():
 
         np.save(os.path.join(dest_path, 'test_feature_matrix.npy'), test_matrix, allow_pickle=True)
         np.save(os.path.join(dest_path, 'test_label.npy'), test_labels, allow_pickle=True)
+
+class sphericalSystem():
+    def __init__(self, environment_map):
+        self.map = environment_map
+        self.height = environment_map.shape[0]
+        self.width = environment_map.shape[1]
+        self.type = environment_map.dtype
+        self.channel = environment_map.shape[2]
+
+    def GenerateImage(self, starting_theta, starting_phi, theta_size, phi_size, height_resolution, width_resolution):
+        # create four points on the sphere
+        top_left_sph = np.array([1, starting_theta, starting_phi], dtype = np.float32)
+        top_right_sph = np.array([1, starting_theta + theta_size, starting_phi], dtype = np.float32)
+        bot_left_sph = np.array([1, starting_theta, starting_phi+phi_size], dtype = np.float32)
+        bot_right_sph = np.array([1, starting_theta + theta_size, starting_phi+phi_size], dtype = np.float32)
+
+        # transfer them to rect system
+        top_left = np.array([top_left_sph[0] * np.cos(top_left_sph[1]) * np.sin(top_left_sph[2]), \
+            top_left_sph[0] * np.sin(top_left_sph[1]) * np.sin(top_left_sph[2]), top_left_sph[0] * np.cos(top_left_sph[2])])
+        top_right = np.array([top_right_sph[0] * np.cos(top_right_sph[1]) * np.sin(top_right_sph[2]), \
+            top_right_sph[0] * np.sin(top_right_sph[1]) * np.sin(top_right_sph[2]), top_right_sph[0] * np.cos(top_right_sph[2])])
+        bot_left = np.array([bot_left_sph[0] * np.cos(bot_left_sph[1]) * np.sin(bot_left_sph[2]), \
+            bot_left_sph[0] * np.sin(bot_left_sph[1]) * np.sin(bot_left_sph[2]), bot_left_sph[0] * np.cos(bot_left_sph[2])])
+        bot_right = np.array([bot_right_sph[0] * np.cos(bot_right_sph[1]) * np.sin(bot_right_sph[2]), \
+            bot_right_sph[0] * np.sin(bot_right_sph[1]) * np.sin(bot_right_sph[2]), bot_right_sph[0] * np.cos(bot_right_sph[2])])
+
+        # form the image plane
+        img_width_difference = top_right - top_left
+        img_height_difference = bot_left - top_left
+        img_rect = np.zeros(shape=(height_resolution,width_resolution, 3), dtype=np.float32)
+
+        left = top_left
+        right = top_right
+        height_array = np.linspace(top_left ,bot_left, height_resolution)
+        for i in range(height_resolution):
+            left = height_array[i]
+            right = left + img_width_difference
+            img_rect[i,:,:] = np.linspace(left,right,width_resolution)
+
+        # transfer the image plane back to spherical 
+        theta = np.arctan2(img_rect[:,:,1], img_rect[:,:,0])
+        theta[theta < 0] = theta[theta < 0] + math.pi/2
+        phi = np.arccos(img_rect[:,:,2]/np.linalg.norm(img_rect, axis=2))
+
+        # print(theta)
+        # print(phi)
+
+        # Read from the original image
+        u = np.floor(theta  * self.width / math.pi)
+        v = np.floor(phi * self.height / (math.pi/2))
+
+        img = np.zeros(shape=(height_resolution,width_resolution, self.channel), dtype=self.type)
+
+        # x = np.linspace(0, math.pi,self.width)
+        # y = np.linspace(0, math.pi/2,self.height)
+        # points_x, points_y = np.meshgrid(x, y)
+        # points_x_lin = np.reshape(points_x, -1)
+        # points_y_lin = np.reshape(points_y, -1)
+        
+        # points = np.stack((points_x_lin, points_y_lin), axis = 1)
+        # print(points.shape)
+
+        # grid_x, grid_y = np.meshgrid(u,v)
+        # print(u.shape)   
+        for i in range(self.channel):
+            f = interp2d(np.linspace(0, math.pi,self.width), np.linspace(0,math.pi/2, self.height), self.map[:,:,i], kind='linear')
+            for j in range(theta.shape[0]):
+                img[j,:,i]  = (f(theta[j,:], phi[j,:]))[0,:]
+            # print(img[:,:,i])
+        # for i in range(self.channel):
+        #     img[:,:,i] = self.map[v,u,i]
+        #     print(img[:,:,i]) 
+        return img
+
 
 # test
 if __name__ == '__main__':

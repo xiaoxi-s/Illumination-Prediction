@@ -12,9 +12,9 @@ from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler
 from torchvision import transforms
 
-from loss import average_difference_loss, location_success_count
-from network import IlluminationPredictionNet
-from dataset import EnvironmentJPGDataset
+from Training.loss import average_difference_loss, location_success_count
+from Training.network import IlluminationPredictionNet
+from Training.dataset import EnvironmentJPGDataset
 
 
 def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
