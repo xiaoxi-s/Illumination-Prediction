@@ -419,7 +419,7 @@ class sphericalSystem():
         # grid_x, grid_y = np.meshgrid(u,v)
         # print(u.shape)   
         for i in range(self.channel):
-            f = interp2d(np.linspace(0, math.pi,self.width), np.linspace(0,math.pi/2, self.height), self.map[:,:,i], kind='linear')
+            f = interp2d(np.linspace(0, math.pi * 2,self.width), np.linspace(0,math.pi, self.height), self.map[:,:,i], kind='linear')
             for j in range(theta.shape[0]):
                 img[j,:,i]  = (f(theta[j,:], phi[j,:]))[0,:]
             # print(img[:,:,i])
