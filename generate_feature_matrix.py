@@ -4,7 +4,7 @@ import json
 import argparse
 import numpy as np
 
-from preprocess import DataGenerator
+from dataset.preprocess import DataGenerator
 
 
 if __name__ == '__main__':
