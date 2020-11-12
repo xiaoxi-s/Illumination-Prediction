@@ -3,7 +3,7 @@ import cv2
 import argparse
 import numpy as np
 
-from preprocess import JPGLabeler, EXRLabeler 
+from dataset.preprocess import JPGLabeler, EXRLabeler 
 
 
 if __name__ == '__main__':
