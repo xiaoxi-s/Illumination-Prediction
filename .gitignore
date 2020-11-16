@@ -1,3 +1,16 @@
+# installation related file
+build/
+dist/
+*.egg-info
+.vscode/
+
+# Too large
+Datasets/
+
+# virtual environment
+venv_ip_impl
+venv/
+=======
 # all data is not ignored
 data/
 annotated_examples/
@@ -7,3 +20,5 @@ venv_open_exr/
 
 # pycache
 __pycache__/
+
+

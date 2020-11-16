@@ -1,12 +1,16 @@
 import os
 import torch
+import cv2
 import torchvision.models as models
 import transformer 
-
-from dataset import EnvironmentJPGDataset
+import utils
+import preprocess
+import transformer
+import math
+from Training.dataset import EnvironmentJPGDataset
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from network import IlluminationPredictionNet
+from Training.network import IlluminationPredictionNet
 
 def test_dataset():
     ds = EnvironmentJPGDataset(os.path.join('data', 'labeled_images.npy'), os.path.join('data', 'labels.npy'))
@@ -20,6 +24,13 @@ def test_transformer():
     ds = EnvironmentJPGDataset(os.path.join('data', 'labeled_images.npy'), os.path.join('data', 'labels.npy'),\
         transform= transforms.Compose([transformer.Rescale((256, 256)),
                                        transformer.ToTensor()]))
+
+def test_sphericalSystem():
+    img=cv2.imread('./data/EnvironmentMapTesting.jpg', -1)
+    handle = preprocess.sphericalSystem(img)
+    # img_new = handle.GenerateImage(0,math.pi*2. / 10., math.pi/4., math.pi/5., 400, 400)
+    img_new = handle.GenerateImage(0,math.pi/4, math.pi/2., math.pi/2., 400, 400)
+    utils.imshow(img_new)
 
 
 def test_run_in_vgg11():
@@ -70,3 +81,4 @@ if __name__ == '__main__':
     #test_transformer()
     #test_run_in_vgg11()
     #test_run_in_illumination_prediction_net()
+    test_sphericalSystem()

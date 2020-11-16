@@ -31,5 +31,5 @@ def convert_exr_and_write(exr, dest_path, img_format, default_height = 400, defa
         raise TypeError('Supported format jpg and exr')
 
 def imshow(img):
-    plt.imshow(img)
-    plt.show()
+    cv2.imshow('image', img)
+    cv2.waitKey(0)
