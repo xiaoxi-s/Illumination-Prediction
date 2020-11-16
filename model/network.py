@@ -16,13 +16,11 @@ class IlluminationPredictionNet(nn.Module):
 
         # linear + activation + linear (the out put)
         self.dense121_fixed.classifier = nn.Linear(in_features, 512)
-        self.activation = nn.ReLU(512)
         self.output_layer = nn.Linear(512, 27)
 
 
     def forward(self, input):
         output = self.dense121_fixed(input)
-        output = self.activation(output)
         output = self.output_layer(output)
 
         return output
