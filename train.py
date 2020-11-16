@@ -4,6 +4,8 @@ import copy
 import data
 import torch
 import torch.optim as optim
+import numpy as np
+import matplotlib.pyplot as plt
 
 import dataset.transformer as transformer
 
@@ -29,6 +31,13 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     device = torch.device('cuda' if torch.cuda.is_available() else ('cpu'))
     model.to(device)
     
+    # to draw figures
+    train_loss_epoch = np.zeros((num_epochs, 2))
+    train_acc_epoch = np.zeros((num_epochs, 2))
+
+    val_loss_epoch = np.zeros((num_epochs, 2))
+    val_acc_epoch = np.zeros((num_epochs, 2))
+
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
@@ -46,7 +55,6 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
             running_corrects = 0
 
             # Iterate over data.
-
             for (i, data) in enumerate(dataloader):
                 inputs = data['images'].to(device)
                 labels = data['labels'].to(device)
@@ -69,11 +77,25 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
-            if phase == 'train':
+            if phase == 'train' and scheduler is not None:
                 scheduler.step()
 
             epoch_loss = running_loss / len(dataloader)
             epoch_acc = running_corrects / len(dataloader)
+
+            # record loss & acc during training
+            if phase == 'train':
+                train_loss_epoch[epoch][1] = epoch_loss
+                train_acc_epoch[epoch][1] = epoch_acc
+
+                train_loss_epoch[epoch][0] = epoch
+                train_acc_epoch[epoch][0] = epoch
+            else:
+                val_loss_epoch[epoch][1] = epoch_loss
+                val_acc_epoch[epoch][1] = epoch_acc
+
+                val_loss_epoch[epoch][0] = epoch
+                val_acc_epoch[epoch][0] = epoch
 
             print('{} Loss: {:.4f} Acc: {:.4f}'.format(
                 phase, epoch_loss, epoch_acc))
@@ -88,12 +110,36 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
 
-    if best_model_wts is None:
+    if best_model_wts is None and num_epochs >= 25:
         raise TypeError("Accuracy Metric is Invalid")
 
-    torch.save(best_model_wts, os.path.join('checkpoint','naive_model' + datetime.now().strftime("_%H:%M:%S_%d-%m-%Y")))
+    if num_epochs >= 25:
+        torch.save(best_model_wts, os.path.join('checkpoint','naive_model_with_activation' + datetime.now().strftime("_%H:%M:%S_%d-%m-%Y")))
 
-    return best_model_wts
+    return best_model_wts, train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch
+
+
+def plot_loss_acc(train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch):
+    epoch_num = len(train_loss_epoch)
+
+    # loss plot
+    l1, = plt.plot(train_loss_epoch[:,0], train_loss_epoch[:, 1], color='blue')
+    l2, = plt.plot(val_loss_epoch[:,0], val_loss_epoch[:, 1], color ='red')
+    plt.legend(handles=[l1,l2],labels=['train','validation'],loc='best')
+    plt.title('Training and Validation Loss')
+    plt.xlabel('epoch')
+    plt.ylabel('loss')
+    plt.savefig(os.path.join("figures", "epoch-vs-squared_loss" + datetime.now().strftime("_%H:%M:%S_%d-%m-%Y") + ".png"))
+    plt.close('all')
+
+    # acc plot
+    l1, = plt.plot(train_acc_epoch[:,0], train_acc_epoch[:,1], color='blue')
+    l2, = plt.plot(val_acc_epoch[:,0], val_acc_epoch[:,1], color ='red')
+    plt.legend(handles=[l1,l2],labels=['train','validation'],loc='best')
+    plt.title('Training and Validation Accuracy')
+    plt.xlabel('epoch')
+    plt.ylabel('accuracy')
+    plt.savefig(os.path.join("figures", "epoch-vs-accuracy"+ datetime.now().strftime("_%H:%M:%S_%d-%m-%Y") + ".png"))
 
 
 if __name__ == '__main__':
@@ -112,4 +158,6 @@ if __name__ == '__main__':
 
     optimizer = optim.SGD(model.parameters(), lr=0.0001, momentum=0.9)
     scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.01)
-    model = train_model(model, average_difference_loss, optimizer, scheduler, 225)
+    model, train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch = train_model(model, average_difference_loss, optimizer, None, 25)
+
+    plot_loss_acc(train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch)
