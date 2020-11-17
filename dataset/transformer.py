@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 from skimage import transform
 
@@ -82,3 +83,18 @@ class ToTensor(object):
         image = image.transpose((2, 0, 1))
         return {'images': torch.from_numpy(image),
                 'labels': torch.from_numpy(landmarks)}
+
+
+''' Normalize Images in torch.tensor'''
+class CustomNormalize(object):
+    def __init__(self, mean, std):
+        self.mean = torch.from_numpy(np.resize(mean, (3, 1, 1)))
+        self.std = torch.from_numpy(np.resize(std, (3, 1, 1)))
+
+    def __call__(self, sample):
+        images, landmarks = sample['images'], sample['labels']
+        output = (images - self.mean) / self.std
+
+        return {'images': output,
+                'labels': landmarks}
+
