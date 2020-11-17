@@ -355,7 +355,7 @@ class DataGenerator():
         np.save(os.path.join(dest_path, 'test_feature_matrix.npy'), test_matrix, allow_pickle=True)
         np.save(os.path.join(dest_path, 'test_label.npy'), test_labels, allow_pickle=True)
 
-class sphericalSystem():
+class NaiveCropper():
     def __init__(self, environment_map):
         self.map = environment_map
         self.height = environment_map.shape[0]
