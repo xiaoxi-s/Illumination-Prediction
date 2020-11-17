@@ -6,6 +6,8 @@ import torch
 import torch.optim as optim
 import numpy as np
 import matplotlib.pyplot as plt
+import argparse
+
 
 import dataset.transformer as transformer
 
@@ -143,21 +145,61 @@ def plot_loss_acc(train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epo
 
 
 if __name__ == '__main__':
-    train_ds = EnvironmentJPGDataset(os.path.join('data', 'train_feature_matrix.npy'), os.path.join('data', 'train_label.npy'),\
-        transform= transforms.Compose([transformer.Rescale((224, 224)),
-                                       transformer.ToTensor()]))
-    test_ds = EnvironmentJPGDataset(os.path.join('data', 'test_feature_matrix.npy'), os.path.join('data', 'test_label.npy'),\
-        transform= transforms.Compose([transformer.Rescale((224, 224)),
-                                       transformer.ToTensor()]))
+    parser = argparse.ArgumentParser(description='train model')
+    parser.add_argument('-opt', '--optimizer', type=str,
+                    help='choose SGD or Adam', default='sgd')
+    parser.add_argument('-lr', '--learningrate', type=float, help='learning rate', default=0.0001)
+    parser.add_argument('-mm', '--momentum', type=float, help='momentum for sgd', default=0.9)
+    parser.add_argument('-b1', '--beta1', type=float, help='beta1 parameter for Adam', default=0.9)
+    parser.add_argument('-b2', '--beta2', type=float, help='beta2 parameter for Adam', default=0.999)
+    parser.add_argument('-e', '--epsilon', type=float, help='eps parameter for Adam', default=1e-8)
+    parser.add_argument('-he', '--height', type=int, help = 'height of the input image', default=400)
+    parser.add_argument('-w', '--width', type=int, help = 'width of the input image', default=900)
+    args = parser.parse_args()
 
+    # args
+    choice_of_optimizer = str.lower(str(args.optimizer))
+    if choice_of_optimizer != 'sgd' and choice_of_optimizer != 'adam':
+        raise TypeError('Optimizer Must be SGD or Adam')
+
+    learning_rate = args.learningrate
+    sgd_momentum = args.momentum
+
+    beta1 = args.beta1
+    beta2 = args.beta2
+    adam_beta = (beta1, beta2)
+    adam_epsilon = args.epsilon
+
+    height = args.height
+    width = args.width
+    #transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    # dataset
+    train_ds = EnvironmentJPGDataset(os.path.join('data', 'train_feature_matrix.npy'), os.path.join('data', 'train_label.npy'),\
+        transform= transforms.Compose([transformer.Rescale((height, width)),
+                                       transformer.ToTensor(),
+                                       transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+                                       )
+    test_ds = EnvironmentJPGDataset(os.path.join('data', 'test_feature_matrix.npy'), os.path.join('data', 'test_label.npy'),\
+        transform= transforms.Compose([transformer.Rescale((height, width)),
+                                       transformer.ToTensor(),
+                                       transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+                                       )
     train_dataloader = DataLoader(train_ds, 1)
     test_dataloader = DataLoader(test_ds, 1)
 
+    # model
     model = IlluminationPredictionNet()
     model.double()
 
-    optimizer = optim.SGD(model.parameters(), lr=0.0001, momentum=0.9)
+    # optimizer
+    if optim == 'sgd':
+        optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=sgd_momentum)
+    else:
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas=adam_beta, eps=adam_epsilon)
+
     scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.01)
-    model, train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch = train_model(model, average_difference_loss, optimizer, None, 25)
+    
+    # train
+    model, train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch = train_model(model, average_difference_loss, optimizer, scheduler, 100)
 
     plot_loss_acc(train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch)
