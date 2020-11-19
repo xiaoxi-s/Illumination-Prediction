@@ -131,7 +131,7 @@ def plot_loss_acc(train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epo
     plt.title('Training and Validation Loss')
     plt.xlabel('epoch')
     plt.ylabel('loss')
-    plt.savefig(os.path.join("figures", "epoch-vs-squared_loss" + datetime.now().strftime("_%H:%M:%S_%d-%m-%Y") + ".png"))
+    plt.savefig(os.path.join("figures", "epoch-vs-squared_loss" + datetime.now().strftime("_%H-%M-%S_%d-%m-%Y") + ".png"))
     plt.close('all')
 
     # acc plot
@@ -141,7 +141,7 @@ def plot_loss_acc(train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epo
     plt.title('Training and Validation Accuracy')
     plt.xlabel('epoch')
     plt.ylabel('accuracy')
-    plt.savefig(os.path.join("figures", "epoch-vs-accuracy"+ datetime.now().strftime("_%H:%M:%S_%d-%m-%Y") + ".png"))
+    plt.savefig(os.path.join("figures", "epoch-vs-accuracy"+ datetime.now().strftime("_%H-%M-%S_%d-%m-%Y") + ".png"))
 
 
 if __name__ == '__main__':
