@@ -6,10 +6,11 @@
 
   - Finished Lableling jpeg images and exr files separately
   - Build network
+  - Train Network
 
 ## Next Step
-
-  - Train Network
+  - Address Overfitting (validation error is too high)
+  
 
 ## Setup Tutorial
 
