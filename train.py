@@ -155,12 +155,15 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--epsilon', type=float, help='eps parameter for Adam', default=1e-8)
     parser.add_argument('-he', '--height', type=int, help = 'height of the input image', default=400)
     parser.add_argument('-w', '--width', type=int, help = 'width of the input image', default=900)
+    parser.add_argument('-bs', '--batchsize', type=int, help='batch size', default=32)
     args = parser.parse_args()
 
     # args
     choice_of_optimizer = str.lower(str(args.optimizer))
     if choice_of_optimizer != 'sgd' and choice_of_optimizer != 'adam':
         raise TypeError('Optimizer Must be SGD or Adam')
+    
+    batch_size = args.batchsize
 
     learning_rate = args.learningrate
     sgd_momentum = args.momentum
@@ -184,8 +187,8 @@ if __name__ == '__main__':
                                        transformer.ToTensor(),
                                        transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
                                        )
-    train_dataloader = DataLoader(train_ds, 1)
-    test_dataloader = DataLoader(test_ds, 1)
+    train_dataloader = DataLoader(train_ds, batch_size)
+    test_dataloader = DataLoader(test_ds, batch_size)
 
     # model
     model = IlluminationPredictionNet()
