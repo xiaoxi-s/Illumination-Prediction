@@ -4,11 +4,18 @@ def average_difference_loss(output, label):
     '''
     Simple averaged squared loss between labels
     '''
-    num = output.shape[0] * 3
-    loss = torch.mean((label - output)**2)/num
+    loss = torch.mean((label - output)**2)
 
     return loss
 
+
+def average_location_difference(output, label):
+    '''
+    Only calculate location difference
+    '''
+    loss = torch.mean((label[:, :, 0:2] - output[:, :, 0:2])**2)
+
+    return loss
 
 def location_success_count(output, label, threshold=100):
     '''
@@ -17,7 +24,7 @@ def location_success_count(output, label, threshold=100):
     output_locations = output[:, :, 0:2]
     label_locations = label[:, :, 0:2]
 
-    distance = torch.sum((output_locations - label_locations)**2, axis = 2)
+    distance = torch.sum(torch.square((output_locations - label_locations)**2), axis = 2)
     
     count = torch.count_nonzero(distance < 100)
 
