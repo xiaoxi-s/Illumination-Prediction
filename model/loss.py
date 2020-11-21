@@ -24,7 +24,7 @@ def location_success_count(output, label, threshold=100):
     output_locations = output[:, :, 0:2]
     label_locations = label[:, :, 0:2]
 
-    distance = torch.sum(torch.square((output_locations - label_locations)**2), axis = 2)
+    distance = torch.sqrt(torch.sum((output_locations - label_locations)**2, axis = 2))
     
     count = torch.count_nonzero(distance < 100)
 
