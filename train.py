@@ -58,8 +58,8 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 
             # Iterate over data.
             for (i, data) in enumerate(dataloader):
-                inputs = data['images'].to(device)
-                labels = data['labels'].to(device)
+                inputs = data[0].to(device)
+                labels = data[1].to(device)
 
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -82,8 +82,8 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
             if phase == 'train' and scheduler is not None:
                 scheduler.step()
 
-            epoch_loss = running_loss / len(dataloader)
-            epoch_acc = running_corrects / len(dataloader)
+            epoch_loss = running_loss / len(dataloader)/dataloader.batch_size
+            epoch_acc = running_corrects / len(dataloader)/3/dataloader.batch_size
 
             # record loss & acc during training
             if phase == 'train':
@@ -116,7 +116,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
         raise TypeError("Accuracy Metric is Invalid")
 
     if num_epochs >= 25:
-        torch.save(best_model_wts, os.path.join('checkpoint','naive_model_with_activation' + datetime.now().strftime("_%H:%M:%S_%d-%m-%Y")))
+        torch.save(best_model_wts, os.path.join('checkpoint','naive_model_with_activation' + datetime.now().strftime("_%H_%M_%S_%d-%m-%Y")))
 
     return best_model_wts, train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch
 
@@ -155,7 +155,8 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--epsilon', type=float, help='eps parameter for Adam', default=1e-8)
     parser.add_argument('-he', '--height', type=int, help = 'height of the input image', default=400)
     parser.add_argument('-w', '--width', type=int, help = 'width of the input image', default=900)
-    parser.add_argument('-bs', '--batchsize', type=int, help='batch size', default=32)
+    parser.add_argument('-bs', '--batchsize', type=int, help='batch size', default=16)
+    parser.add_argument('-epoch', '--epoch', type=int, help='training epoch', default = 50)
     args = parser.parse_args()
 
     # args
@@ -178,15 +179,15 @@ if __name__ == '__main__':
     #transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     # dataset
     train_ds = EnvironmentJPGDataset(os.path.join('data', 'train_feature_matrix.npy'), os.path.join('data', 'train_label.npy'),\
-        transform= transforms.Compose([transformer.Rescale((height, width)),
+        transform= transforms.Compose([
                                        transformer.ToTensor(),
                                        transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-                                       )
+                                       , augmentation=(1, 2))
     test_ds = EnvironmentJPGDataset(os.path.join('data', 'test_feature_matrix.npy'), os.path.join('data', 'test_label.npy'),\
-        transform= transforms.Compose([transformer.Rescale((height, width)),
+        transform= transforms.Compose([
                                        transformer.ToTensor(),
                                        transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-                                       )
+                                       , augmentation=(1, 2))
     train_dataloader = DataLoader(train_ds, batch_size)
     test_dataloader = DataLoader(test_ds, batch_size)
 
@@ -200,9 +201,9 @@ if __name__ == '__main__':
     else:
         optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas=adam_beta, eps=adam_epsilon)
 
-    scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.01)
+    scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.01)
     
     # train
-    model, train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch = train_model(model, average_difference_loss, optimizer, scheduler, 100)
+    model, train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch = train_model(model, average_difference_loss, optimizer, scheduler, 1)
 
     plot_loss_acc(train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch)

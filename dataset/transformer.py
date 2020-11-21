@@ -9,9 +9,8 @@ class Normalize(object):
     def __init__(self):
         pass
 
-    def __call__(self, sample):
-        image, labels = sample['images'], sample['labels']
-
+    def __call__(self, input):
+        image, labels = input[0], input[1]
         h, w = image.shape[:2]
         if isinstance(self.output_size, int):
             if h > w:
@@ -29,9 +28,7 @@ class Normalize(object):
         # x and y axes are axis 1 and 0 respectively
         # landmarks = landmarks * [new_w / w, new_h / h]
 
-        return {'images': img, 'landmarks': landmarks}
-
-
+        return img, labels
 
 ''' source code from pytorch '''
 
@@ -48,9 +45,8 @@ class Rescale(object):
         assert isinstance(output_size, (int, tuple))
         self.output_size = output_size
 
-    def __call__(self, sample):
-        image, landmarks = sample['images'], sample['labels']
-
+    def __call__(self, input):
+        image, labels = input[0], input[1]
         h, w = image.shape[:2]
         if isinstance(self.output_size, int):
             if h > w:
@@ -68,21 +64,19 @@ class Rescale(object):
         # x and y axes are axis 1 and 0 respectively
         # landmarks = landmarks * [int(new_w / w), int(new_h / h)]
 
-        return {'images': img, 'labels': landmarks}
+        return img, labels
 
 
 class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
-    def __call__(self, sample):
-        image, landmarks = sample['images'], sample['labels']
-
+    def __call__(self, input):
+        image, labels = input[0], input[1]
         # swap color axis because
         # numpy image: H x W x C
         # torch image: C X H X W
         image = image.transpose((2, 0, 1))
-        return {'images': torch.from_numpy(image),
-                'labels': torch.from_numpy(landmarks)}
+        return torch.from_numpy(image), torch.from_numpy(labels)
 
 
 ''' Normalize Images in torch.tensor'''
@@ -91,10 +85,9 @@ class CustomNormalize(object):
         self.mean = torch.from_numpy(np.resize(mean, (3, 1, 1)))
         self.std = torch.from_numpy(np.resize(std, (3, 1, 1)))
 
-    def __call__(self, sample):
-        images, landmarks = sample['images'], sample['labels']
-        output = (images - self.mean) / self.std
+    def __call__(self, input):
+        image, labels = input[0], input[1]
+        output = (image - self.mean) / self.std
 
-        return {'images': output,
-                'labels': landmarks}
+        return output, labels
 
