@@ -363,7 +363,80 @@ class NaiveCropper():
         self.type = environment_map.dtype
         self.channel = environment_map.shape[2]
 
-    def GenerateImage(self, starting_theta, starting_phi, theta_size, phi_size, height_resolution, width_resolution):
+    
+    def generate_image(self, view_direction_theta, view_direction_phi, FOV_horizontal, image_width, image_height):
+        """
+        Return a cropped image
+
+        Parameters
+        ----------
+        view_direction_theta : float.
+            The theta of the view vector, which defines in spherical coordinate
+
+        view_direction_phi : float.
+            The phi of the view vector, which defines in spherical coordinate
+
+        FOV_horizontal : float.
+            The field of view of the cropped image horizontally
+
+        image_height, image_width : int.
+
+        Returns
+        -------
+        out : 2darray
+            A 2darray with size = image_heigh x image_width
+
+        Examples
+        --------
+        image = handle.generate_image(0, 0, math.pi/3, 1080, 720)
+
+        """
+        FOV_vertical = FOV_horizontal/image_width * image_height
+        theta_start = view_direction_theta - FOV_horizontal/2
+        phi_start = view_direction_phi - FOV_vertical/2
+
+        image_center = np.array([1 * np.cos(view_direction_theta) * np.sin(view_direction_phi), \
+            1 * np.sin(view_direction_theta) * np.sin(view_direction_phi),1 * np.cos(view_direction_phi)])
+        horizontal_size_half = np.tan(FOV_horizontal/2)
+        vertical_size_half = np.tan(FOV_vertical/2)
+        
+        horizontal_displacement = np.array([-horizontal_size_half * np.sin(view_direction_theta), horizontal_size_half * np.cos(view_direction_theta), 0])
+        vertical_displacement = np.array([-vertical_size_half*np.cos(view_direction_phi)*np.cos(view_direction_theta), -vertical_size_half * np.cos(view_direction_phi) * np.sin(view_direction_theta), \
+            vertical_size_half*np.sin(view_direction_phi)])
+
+        top_left = image_center + vertical_displacement - horizontal_displacement
+        top_right = image_center + vertical_displacement + horizontal_displacement
+        bot_left = image_center - vertical_displacement - horizontal_displacement
+        bot_right = image_center - vertical_displacement + horizontal_displacement
+
+        # form the image plane
+        
+        img_rect = np.zeros(shape=(image_height,image_width, 3), dtype=np.float32)
+        left = top_left
+        right = top_right
+        height_array = np.linspace(top_left ,bot_left, image_height)
+        for i in range(image_height):
+            left = height_array[i]
+            right = left + horizontal_displacement*2
+            img_rect[i,:,:] = np.linspace(left,right,image_width)
+        # transfer the image plane back to spherical 
+        theta = np.arctan2(img_rect[:,:,1], img_rect[:,:,0])
+        theta[theta < 0] = theta[theta < 0] + math.pi*2
+        phi = np.arccos(img_rect[:,:,2]/np.linalg.norm(img_rect, axis=2))
+
+        # Read from the original image
+        # u = np.floor(theta  * self.width / math.pi)
+        # v = np.floor(phi * self.height / (math.pi/2))
+        img = np.zeros(shape=(image_height,image_width, self.channel), dtype=self.type)
+
+        for i in range(self.channel):
+            f = interp2d(np.linspace(0, math.pi * 2,self.width), np.linspace(0,math.pi, self.height), self.map[:,:,i], kind='linear')
+            for j in range(theta.shape[0]):
+                for k in range(theta.shape[1]):
+                    img[j,k,i]  = (f(theta[j,k], phi[j,k]))[0]
+        return img
+
+    def generate_image_detail(self, starting_theta, starting_phi, theta_size, phi_size, height_resolution, width_resolution):
         # create four points on the sphere
         top_left_sph = np.array([1, starting_theta, starting_phi], dtype = np.float32)
         top_right_sph = np.array([1, starting_theta + theta_size, starting_phi], dtype = np.float32)
