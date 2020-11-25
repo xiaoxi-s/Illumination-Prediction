@@ -30,6 +30,39 @@ def convert_exr_and_write(exr, dest_path, img_format, default_height = 400, defa
     else:
         raise TypeError('Supported format jpg and exr')
 
+
 def imshow(img):
     cv2.imshow('image', img)
     cv2.waitKey(0)
+
+
+def plot_loss_acc(train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch):
+    epoch_num = len(train_loss_epoch)
+
+    # loss plot
+    l1, = plt.plot(train_loss_epoch[:,0], train_loss_epoch[:, 1], color='blue')
+    l2, = plt.plot(val_loss_epoch[:,0], val_loss_epoch[:, 1], color ='red')
+    plt.legend(handles=[l1,l2],labels=['train','validation'],loc='best')
+    plt.title('Training and Validation Loss')
+    plt.xlabel('epoch')
+    plt.ylabel('loss')
+    plt.savefig(os.path.join("figures", "epoch-loss" + datetime.now().strftime("_%H-%M-%S_%d-%m-%Y") + ".png"))
+    plt.close('all')
+
+    # location acc plot
+    l1, = plt.plot(train_acc_epoch[:,0], train_acc_epoch[:,1], color='blue')
+    l2, = plt.plot(val_acc_epoch[:,0], val_acc_epoch[:,1], color ='red')
+    plt.legend(handles=[l1,l2],labels=['train','validation'],loc='best')
+    plt.title('Location Accuracy')
+    plt.xlabel('epoch')
+    plt.ylabel('location accuracy')
+    plt.savefig(os.path.join("figures", "epoch-loc-acc"+ datetime.now().strftime("_%H-%M-%S_%d-%m-%Y") + ".png"))
+
+    # color acc plot
+    l1, = plt.plot(train_acc_epoch[:,0], train_acc_epoch[:,1], color='blue')
+    l2, = plt.plot(val_acc_epoch[:,0], val_acc_epoch[:,1], color ='red')
+    plt.legend(handles=[l1,l2],labels=['train','validation'],loc='best')
+    plt.title('Color Accuracy')
+    plt.xlabel('epoch')
+    plt.ylabel('color accuracy')
+    plt.savefig(os.path.join("figures", "epoch-color-acc"+ datetime.now().strftime("_%H-%M-%S_%d-%m-%Y") + ".png"))
