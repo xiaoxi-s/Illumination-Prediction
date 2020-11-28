@@ -9,7 +9,7 @@
   - Train Network
 
 ## Next Step
-  - Address Overfitting (validation error is too high)
+  - Determine the influence of accuracy measure
   
 
 ## Setup Tutorial
