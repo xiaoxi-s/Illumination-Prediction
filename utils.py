@@ -1,6 +1,9 @@
-import numpy as np
+import os
 import cv2
+import numpy as np
 import matplotlib.pyplot as plt
+
+from datetime import datetime
 
 
 def convert_exr_and_write(exr, dest_path, img_format, default_height = 400, default_width = 900):
@@ -46,7 +49,7 @@ def plot_loss_acc(train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epo
     plt.title('Training and Validation Loss')
     plt.xlabel('epoch')
     plt.ylabel('loss')
-    plt.savefig(os.path.join("figures", "epoch-loss" + datetime.now().strftime("_%H-%M-%S_%d-%m-%Y") + ".png"))
+    plt.savefig(os.path.join("figures", datetime.now().strftime("%d-%m-%Y_%H-%M-%S") + "epoch-loss" + ".png"))
     plt.close('all')
 
     # location acc plot
@@ -56,13 +59,14 @@ def plot_loss_acc(train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epo
     plt.title('Location Accuracy')
     plt.xlabel('epoch')
     plt.ylabel('location accuracy')
-    plt.savefig(os.path.join("figures", "epoch-loc-acc"+ datetime.now().strftime("_%H-%M-%S_%d-%m-%Y") + ".png"))
-
+    plt.savefig(os.path.join("figures", datetime.now().strftime("%d-%m-%Y_%H-%M-%S") + "epoch-loc-acc" + ".png"))
+    plt.close('all')
+    
     # color acc plot
-    l1, = plt.plot(train_acc_epoch[:,0], train_acc_epoch[:,1], color='blue')
-    l2, = plt.plot(val_acc_epoch[:,0], val_acc_epoch[:,1], color ='red')
+    l1, = plt.plot(train_acc_epoch[:,0], train_acc_epoch[:,2], color='blue')
+    l2, = plt.plot(val_acc_epoch[:,0], val_acc_epoch[:,2], color ='red')
     plt.legend(handles=[l1,l2],labels=['train','validation'],loc='best')
     plt.title('Color Accuracy')
     plt.xlabel('epoch')
     plt.ylabel('color accuracy')
-    plt.savefig(os.path.join("figures", "epoch-color-acc"+ datetime.now().strftime("_%H-%M-%S_%d-%m-%Y") + ".png"))
+    plt.savefig(os.path.join("figures", datetime.now().strftime("%d-%m-%Y_%H-%M-%S") +  "epoch-color-acc"+ ".png"))

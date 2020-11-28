@@ -17,8 +17,8 @@ def location_success_count(output, label, threshold=100):
 
 def color_success_count(output, label, threshold = 100):
 
-    output_colors = output[:, :, -4:-1]
-    label_colors = label[:, :, -4:-1]
+    output_colors = output[:, :, -3:]
+    label_colors = label[:, :, -3:]
 
     distance = torch.sqrt(torch.sum((output_colors - label_colors)**2, axis = 2))
     count = torch.count_nonzero(distance < threshold)
