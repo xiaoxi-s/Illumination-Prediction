@@ -25,7 +25,9 @@ if __name__ == '__main__':
         raise TypeError("Format supported: jpg and exr")
 
     data_path = os.path.join('data', args.datapath)
-    example_path = os.path.join('annotated_examples', str.lower(img_format))
+    print(data_path)
+    example_path = os.path.join('data', 'annotated')
+    print(example_path)
     if not os.path.isdir(example_path):
         os.mkdir(example_path)
 

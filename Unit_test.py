@@ -5,6 +5,7 @@ import torchvision.models as models
 import dataset.transformer 
 import utils
 import dataset.preprocess
+import dataset.ImageCropper
 import math
 
 from dataset.dataset import EnvironmentJPGDataset
@@ -27,7 +28,7 @@ def test_transformer():
 
 def test_sphericalSystem():
     img=cv2.imread('./data/EnvironmentMapTesting.jpg', -1)
-    handle = dataset.preprocess.NaiveCropper(img)
+    handle = dataset.ImageCropper.ImageCropper(img)
     img_new = handle.generate_image(math.pi, math.pi/2, math.pi/2.,1080, 720)
     utils.imshow(img_new)
 
