@@ -2,19 +2,12 @@ import os
 import cv2
 import math
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import imutils
 
-from scipy.interpolate import interp2d
-from functools import cmp_to_key
-
-from imutils import contours
-from skimage import measure
-
-import utils
 
 class result_interpreter():
+    """
+    Not done yet. Basically interpret the result and can be sent to blender for display
+    """
     def post_processing_labelsH(self, labels):
         for label in labels:
             print("rotation y:")

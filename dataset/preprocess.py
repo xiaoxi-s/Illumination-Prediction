@@ -2,28 +2,16 @@ import os
 import cv2
 import math
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import imutils
-
-from scipy.interpolate import interp2d
-from functools import cmp_to_key
-
-from imutils import contours
-from skimage import measure
-from dataset.imagecropper import imagecropper as ImgCp
-import utils
 from random import seed
 from random import random
 from pyquaternion import Quaternion
 
-# extract max
+from functools import cmp_to_key
+import imutils
+from imutils import contours
+from skimage import measure
 
-# grow the seed
-
-# find illuminated part
-
-# repeat
+from dataset.imagecropper import imagecropper as ImgCp
 
 class JPGLabeler():
     def _get_threshold_img(self, img):
@@ -163,7 +151,12 @@ class JPGLabeler():
 
 class EXRLabeler():
     def _get_threshold_img(self, img, threshold):
+        """
+        Return a mask of pixels' value that higher than the extreme in the image * threshold (0 < Threshold < 1)
+        """
         img_one_channel = np.sum(img, axis=-1)
+
+        # average the 20 extremes, prevent outliers
         img_sorted_one_channel = img_one_channel.flatten()
         img_sorted_one_channel = np.sort(img_sorted_one_channel)
         extremes = img_sorted_one_channel[-20:]
@@ -178,6 +171,10 @@ class EXRLabeler():
         return thresh_img
 
     def _find_connected_components(self, img, thresh_img, protion_of_pixel_required):
+        """
+        Find connected componenets in the mask. The pixel count for each componenet should exceed total_image_pixel/protion_of_pixel_required
+        In short, as protion goes up, there will be more components
+        """
         labels = measure.label(thresh_img, connectivity=1, background=0)
         masks = []
         # loop over the unique components
@@ -191,10 +188,12 @@ class EXRLabeler():
             labelMask = np.zeros(thresh_img.shape, dtype="uint8")
             labelMask[labels == label] = 255
             numPixels = cv2.countNonZero(labelMask)
+
             # if the number of pixels in the component is sufficiently
             # large, then add it to our mask of "large blobs"
+            # we have requirements for low threshold image, but not for high threshold image
             if (protion_of_pixel_required == -1):
-                if numPixels > 100:
+                if numPixels > 300:
                     masks.append([np.resize(labelMask, thresh_img.shape), np.sum(img[labelMask == 255])/np.count_nonzero(img[labelMask == 255]), numPixels])
             else:
                 if numPixels > img.shape[0]*img.shape[1]/protion_of_pixel_required:
@@ -204,11 +203,13 @@ class EXRLabeler():
 
     def _label_high(self, masks, img, N = 3):
         labels = []
+        # if there is no enough bright light, add lights that have no color
         if (len(masks) < N):
             for i in range(N-len(masks)):
                 labels.append([0, 0, 0, 0, 0])
         else:
             masks = masks[0:N]
+
         # for each illumination (denoted by mask)
         for mask, _, _ in masks:
             # find the contour
@@ -223,11 +224,13 @@ class EXRLabeler():
 
     def _label_low(self, masks, img, N = 3):
         labels = []
+        # if there is no enough bright light, add lights that have no color
         if (len(masks) < N):
             for i in range(N-len(masks)):
                 labels.append([0, 0, 0, 0, 0])
         else:
             masks = masks[0:N]
+
         for mask, _, _ in masks:
             # cv2.imshow('mask', mask)
             # cv2.waitKey(0)
@@ -249,6 +252,9 @@ class EXRLabeler():
         return labels
             
     def _find_color(self, img, mask):
+        """
+        Find the average color of that region
+        """
         image_size = img.shape
         element = np.count_nonzero(mask)
         counting = np.zeros(img.shape)
@@ -259,6 +265,9 @@ class EXRLabeler():
         return [blue, green, red]
 
     def _average_in_spherical(self, points, img_size):
+        """
+        Find the average position of those points in spherical coordinate
+        """
         points_phi = points[0]
         points_theta = points[1]
 
@@ -288,6 +297,7 @@ class EXRLabeler():
         maskH = []
         maskL = []
         iteration = 0
+        # adjust the threshold to make sure there is 3 bright lights and 3 indirect lights 
         while(iteration < 10):
             iteration += 1
             thresh_img_high = self._get_threshold_img(img, H_threshold)
@@ -351,7 +361,9 @@ class DataGenerator():
     def __init__(self):
         pass
     def translate_cropped_image(self, new_theta, new_phi, labels):
-        # ambient
+        """
+        translate all labels using view vector as unit vector
+        """
         finallabel = []
     
         for label in labels:
@@ -374,6 +386,9 @@ class DataGenerator():
 
 
     def generate_feature_and_label_new(self, source_path, dest_path, show_image):
+        """
+        Set show_image to true to view each images, and its view vector
+        """
         seed(10)
         labeler = EXRLabeler()
         
@@ -401,7 +416,8 @@ class DataGenerator():
             if label is None:
                 discarded_data_set.add(img_name)
                 continue
-
+            
+            # crop 4 images in 4 random locations
             for i in range(4):
                 theta = random() * 2 * math.pi
                 phi = 2 * math.pi / 5 + (random() * math.pi/5)
@@ -512,17 +528,17 @@ class DataGenerator():
 
 
 # test
-if __name__ == '__main__':
-    # preprocessing
-    img = cv2.imread('./test_conversion/5.jpg')
-    l = ImageLabeler()
-    thresh_img = l._get_threshold_img(img)
-    masks = l._find_connected_components(img, thresh_img, 3)
-    img = l._annotate_image(masks, img)
+# if __name__ == '__main__':
+#     # preprocessing
+#     img = cv2.imread('./test_conversion/5.jpg')
+#     l = ImageLabeler()
+#     thresh_img = l._get_threshold_img(img)
+#     masks = l._find_connected_components(img, thresh_img, 3)
+#     img = l._annotate_image(masks, img)
 
-    for mask in masks:
-        plt.imshow(mask)
-        plt.show()
+#     for mask in masks:
+#         plt.imshow(mask)
+#         plt.show()
 
     # exr => label, jpeg => train
     # ambient light

@@ -2,17 +2,8 @@ import os
 import cv2
 import math
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import imutils
 
 from scipy.interpolate import interp2d
-from functools import cmp_to_key
-
-from imutils import contours
-from skimage import measure
-
-import utils
 
 class imagecropper():
     """
@@ -33,7 +24,7 @@ class imagecropper():
 
     def generate_image(self, view_direction_theta, view_direction_phi, FOV_horizontal, image_width, image_height):
         """
-        Return a cropped image
+        Return a cropped image. Update: Can be run in real time
 
         Parameters
         ----------
