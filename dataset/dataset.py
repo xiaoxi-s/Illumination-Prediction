@@ -1,7 +1,7 @@
 import os
 import torch
 import numpy as np
-
+import cv2
 from torch.utils.data import Dataset, DataLoader
 
 
@@ -68,16 +68,25 @@ class EnvironmentJPGDataset(Dataset):
 
 
 class EnvironmentEXRDataset(Dataset):
-    def __init__(self, exr_path, transform=None, augmentation=None):
+    def __init__(self, img_npy_file, label_npy_file, transform=None, augmentation=None):
         """
         Args:
-            exr_path (string): Path to the exr dataset.
+            img_npy_file (string): Path to the image npy file.
+            label_npy_file: Path to the image label npy file.
             transform (callable, optional): Optional transform to be applied
                 on a sample.
             augmentation: a tuple of 2 dims. First is the number of rows; second 
                 is the number of colomns.
         """
-        pass
+        self.environment_frame = np.load(img_npy_file, allow_pickle=True)
+        self.labels = np.load(label_npy_file, allow_pickle=True)
+        self.transform = transform
+
+        size, height, width, channel = self.environment_frame.shape
+        _, N, m = self.labels.shape
+        ratio = None
+
+
 
     def __len__(self):
         pass

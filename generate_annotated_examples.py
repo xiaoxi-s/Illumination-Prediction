@@ -24,7 +24,7 @@ if __name__ == '__main__':
     else:
         raise TypeError("Format supported: jpg and exr")
 
-    data_path = os.path.join('data', args.datapath)
+    data_path = args.datapath
     print(data_path)
     example_path = os.path.join('data', 'annotated')
     print(example_path)
