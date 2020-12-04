@@ -13,7 +13,7 @@ if __name__ == '__main__':
                     help='numebr of images converted, if is -1, convert all the image', default=30)
     args = parser.parse_args()
 
-    data_path = args.datapath
+    data_path = "./data/exr"
     img_format = args.imgformat
     size = args.size
 

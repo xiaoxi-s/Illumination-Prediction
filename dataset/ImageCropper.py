@@ -14,7 +14,7 @@ from skimage import measure
 
 import utils
 
-class ImageCropper():
+class imagecropper():
     """
     This class takes in an environment map and crop image at different orientations
     """
@@ -94,14 +94,29 @@ class ImageCropper():
         # Read from the original image
         # u = np.floor(theta  * self.width / math.pi)
         # v = np.floor(phi * self.height / (math.pi/2))
-        img = np.zeros(shape=(image_height,image_width, self.channel), dtype=self.type)
+        
+        # img = np.zeros(shape=(image_height,image_width, self.channel), dtype=self.type)
+        # for i in range(self.channel):
+        #     f = interp2d(np.linspace(0, math.pi * 2,self.width), np.linspace(0,math.pi, self.height), self.map[:,:,i], kind='linear')
+        #     for j in range(theta.shape[0]):
+        #         for k in range(theta.shape[1]):
+        #             img[j,k,i]  = (f(theta[j,k], phi[j,k]))[0]
 
+        img2 = np.zeros(shape=(image_height,image_width, self.channel), dtype=self.type)
+
+        theta = theta / 2 / math.pi * self.width
+        phi = phi / math.pi * self.height
+        theta = np.round(theta).astype('int') 
+        phi = np.round(phi).astype('int')
+ 
+        theta[theta >= self.width] = self.width-1
+        theta[theta < 0] = 0
+        phi[phi >= self.height] = self.height-1
+        phi[phi < 0] = 0
         for i in range(self.channel):
-            f = interp2d(np.linspace(0, math.pi * 2,self.width), np.linspace(0,math.pi, self.height), self.map[:,:,i], kind='linear')
-            for j in range(theta.shape[0]):
-                for k in range(theta.shape[1]):
-                    img[j,k,i]  = (f(theta[j,k], phi[j,k]))[0]
-        return img
+            img2[:,:,i] = self.map[phi, theta,i]
+        
+        return cv2.GaussianBlur(img2,(3,3),0)
 
     def generate_image_detail(self, starting_theta, starting_phi, theta_size, phi_size, height_resolution, width_resolution):
         # create four points on the sphere
