@@ -323,7 +323,7 @@ class EXRLabeler():
             if (len(maskL) < N and L_threshold > 0.005):
                 L_threshold -= 0.001 / math.sqrt(iteration) * abs(len(maskL) - N)   
                 L_portion_of_pixels_required += 50 / iteration * abs(len(maskL) - N) 
-            elif (len(maskL) > N and L_threshold < H_threshold/4):
+            elif (len(maskL) > N and L_threshold < H_threshold/4 and L_portion_of_pixels_required > 100):
                 L_threshold += 0.001 / math.sqrt(iteration) * abs(len(maskL) - N) 
                 L_portion_of_pixels_required -= 50 / iteration * abs(len(maskL) - N) 
             
