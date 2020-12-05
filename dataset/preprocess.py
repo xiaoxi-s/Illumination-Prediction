@@ -11,7 +11,7 @@ import imutils
 from imutils import contours
 from skimage import measure
 
-from dataset.imagecropper import imagecropper as ImgCp
+from dataset.ImageCropper import imagecropper as ImgCp
 
 class JPGLabeler():
     def _get_threshold_img(self, img):
