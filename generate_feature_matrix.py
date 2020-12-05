@@ -10,7 +10,7 @@ from dataset.preprocess import DataGenerator
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate Feature Matrix')
     parser.add_argument('-f', '--imgformat', type=str,
-                    help='generate annotated images of a specific type: jpg or exr', default='jpg')
+                    help='generate annotated images of a specific type: jpg or exr', default='exr')
     parser.add_argument('-sp', '--sourcepath', type=str, help='data source path', default=os.path.join('data', 'jpg_sample'))
     parser.add_argument('-dp', '--destpath', type=str, help='data destination path', default='data')
 
