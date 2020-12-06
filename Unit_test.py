@@ -5,7 +5,7 @@ import torchvision.models as models
 import dataset.transformer 
 import utils
 import dataset.preprocess as pp
-import dataset.imagecropper 
+import dataset.ImageCropper 
 import math
 import numpy as np
 
@@ -96,9 +96,19 @@ def test_run_in_illumination_prediction_net():
             output = model(img)
 
 
+def test_patched_dataset():
+    path = '/home/adrian/Documents/dataset/combined'
+    train = np.load(os.path.join(path, 'train_feature_matrix.npy'))
+    train = train[0: 2]
+    ind = 0
+    for t in train:
+        tp = t
+        print(1)
+
 if __name__ == '__main__':
     #test_dataset()
     #test_transformer()
     #test_run_in_vgg11()
     #test_run_in_illumination_prediction_net()
-    test_dataGen()
+    #test_dataGen()
+    test_patched_dataset()
