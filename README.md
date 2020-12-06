@@ -11,6 +11,14 @@
 ## Next Step
   - Determine the influence of accuracy measure
   
+# Command line
+
+To patch dataset:
+
+`
+python3 patch_dataset.py -fp $SOURCE_PATH -dp $DEST_PATH
+`
+
 
 ## Setup Tutorial
 
