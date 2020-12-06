@@ -2,6 +2,7 @@ import os
 import cv2
 import math
 import numpy as np
+import time
 from random import seed
 from random import random
 from pyquaternion import Quaternion
@@ -385,20 +386,23 @@ class DataGenerator():
         return finallabel
 
 
-    def generate_feature_and_label_new(self, source_path, dest_path, show_image):
+    def generate_feature_and_label_new(self, source_path, dest_path, show_image, resize_height, resize_width, output_height, output_width, start, end):
         """
         Set show_image to true to view each images, and its view vector
         """
         seed(10)
         labeler = EXRLabeler()
-        
+        since = time.time()
+
         img_names = os.listdir(os.path.join(source_path))
         img_names.sort()
+
+        img_names = img_names[start:end]
 
         discarded_data_set = set()
         label_dict = dict()
         
-        img_index = 0
+        img_index = start
         
         labeled_images = []
         labels = []
@@ -410,6 +414,7 @@ class DataGenerator():
                 print("generating labels for image ", img_index+1, " to ", img_index+10)
 
             img = cv2.imread(os.path.join(source_path, img_name), cv2.IMREAD_UNCHANGED)
+            img = cv2.resize(img, (resize_width, resize_height))
             label = labeler.generate_labels(img)
             cropper = ImgCp(img)
 
@@ -422,7 +427,7 @@ class DataGenerator():
                 theta = random() * 2 * math.pi
                 phi = 2 * math.pi / 5 + (random() * math.pi/5)
 
-                camera_img = cropper.generate_image(theta, phi, math.pi/2, 720, 480)
+                camera_img = cropper.generate_image(theta, phi, math.pi/2, output_width, output_height)
                 if show_image:
                     print("viewing theta", theta, "viewing phi", phi)
                     im = cv2.normalize(camera_img, None, alpha=0, beta = 500, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
@@ -439,6 +444,10 @@ class DataGenerator():
         # store labeled images
         # with open(os.path.join(label_path, 'labels.txt'), 'w') as f:
         #    f.write(json.dumps(label_dict))
+
+        time_elapsed = time.time() - since
+        print('Preprocess complete in {:.0f}m {:.0f}s'.format(
+            time_elapsed // 60, time_elapsed % 60))
 
         labeled_images = np.array(labeled_images)
         labels = np.array(labels, dtype='float64')
@@ -457,15 +466,15 @@ class DataGenerator():
 
         test_matrix = labeled_images[num_of_train_samples:-1]
         test_labels = labels[num_of_train_samples:-1]
+        #np.savez_compressed(os.path.join(dest_path, 'data' + str(start) + '-'+ str(end)), train_matrix = train_matrix, train_labels = train_labels, test_matrix=test_matrix, test_labels = test_labels)
+        np.save(os.path.join(dest_path, str(start) + ':'+ str(end)+'_train_feature_matrix.npy'), train_matrix, allow_pickle=True)
+        np.save(os.path.join(dest_path, str(start) + ':'+ str(end) + '_train_label.npy'), train_labels, allow_pickle=True)
 
-        np.save(os.path.join(dest_path, 'train_feature_matrix.npy'), train_matrix, allow_pickle=True)
-        np.save(os.path.join(dest_path, 'train_label.npy'), train_labels, allow_pickle=True)
-
-        np.save(os.path.join(dest_path, 'test_feature_matrix.npy'), test_matrix, allow_pickle=True)
-        np.save(os.path.join(dest_path, 'test_label.npy'), test_labels, allow_pickle=True)
+        np.save(os.path.join(dest_path, str(start) + ':'+ str(end) + '_test_feature_matrix.npy'), test_matrix, allow_pickle=True)
+        np.save(os.path.join(dest_path, str(start) + ':'+ str(end) + '_test_label.npy'), test_labels, allow_pickle=True)
 
 
-    def generate_feature_and_label(self, source_path, dest_path, img_format='jpg'):
+    def old_generate_feature_and_label(self, source_path, dest_path, img_format='jpg'):
         img_format = str.lower(img_format)
         if img_format == 'jpg' or img_format == 'jpeg':
             labeler = JPGLabeler()
@@ -478,7 +487,7 @@ class DataGenerator():
         label_dict = dict()
         
         img_index = 0
-        
+
         labeled_images = []
         labels = []
 
