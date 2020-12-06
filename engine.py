@@ -37,14 +37,19 @@ if __name__ == '__main__':
     parser.add_argument('-epoch', '--epoch', type=int, help='training epoch', default = 50)
     parser.add_argument('-ag1', '--augmentation_row_num', type=int, help='number of rows for data augmentation', default=1)
     parser.add_argument('-ag2', '--augmentation_col_num', type=int, help='number of columns for data augmentation', default=1)
-    parser.add_argument('-ft', '-finetune', type=int, help='whether fix the feature extractor', default=1)
+    parser.add_argument('-ft', '--finetune', type=int, help='whether fix the feature extractor', default=1)
+    parser.add_argument('-n', '--N',type=int, help='num of light source', default=5)
+    parser.add_argument('-np', '--num_of_param',type=int, help='num of light source', default=5)
     args = parser.parse_args()
 
     # args
     choice_of_optimizer = str.lower(str(args.optimizer))
     if choice_of_optimizer != 'sgd' and choice_of_optimizer != 'adam':
         raise TypeError('Optimizer Must be SGD or Adam')
+    # model param
     fine_tune = args.finetune
+    N = args.N
+    num_of_param = args.num_of_param
     if fine_tune == 0:
         fine_tune = False
     else:
@@ -81,7 +86,7 @@ if __name__ == '__main__':
     test_dataloader = DataLoader(test_ds, batch_size)
 
     # model
-    model = IlluminationPredictionNet(fine_tune)
+    model = IlluminationPredictionNet(N = N, num_of_param = num_of_param, fine_tune = fine_tune)
     model.double()
 
     # optimizer
