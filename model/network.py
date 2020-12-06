@@ -3,7 +3,7 @@ from torch import nn
 from torchsummary import summary
 
 class IlluminationPredictionNet(nn.Module):
-    def __init__(self, fine_tune = True):
+    def __init__(self, N, num_of_param, fine_tune = True):
         # required by the pytorch api
         super(IlluminationPredictionNet, self).__init__()
 
@@ -11,7 +11,7 @@ class IlluminationPredictionNet(nn.Module):
         #self.wrn50_2 = torch.hub.load('pytorch/vision:v0.6.0', 'wide_resnet50_2', pretrained=True)
         self.dense121_fixed = torch.hub.load('pytorch/vision:v0.6.0', 'densenet121', pretrained=True)
 
-        if fine_tune:
+        if not fine_tune:
             for param in self.dense121_fixed.parameters():
                 param.requires_grad = False
 
@@ -21,7 +21,7 @@ class IlluminationPredictionNet(nn.Module):
         self.dense121_fixed.classifier = nn.Linear(in_features, 512)
 
         self.activation = nn.ReLU(512)
-        self.output_layer = nn.Linear(512, 27)
+        self.output_layer = nn.Linear(512, int(N*num_of_param))
 
 
     def forward(self, input):
