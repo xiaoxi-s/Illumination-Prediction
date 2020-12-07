@@ -1,6 +1,7 @@
 import os
 import cv2
 import numpy as np
+import torch
 import matplotlib.pyplot as plt
 
 from datetime import datetime
@@ -70,3 +71,9 @@ def plot_loss_acc(train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epo
     plt.xlabel('epoch')
     plt.ylabel('color accuracy')
     plt.savefig(os.path.join("figures", datetime.now().strftime("%d-%m-%Y_%H-%M-%S") +  "epoch-color-acc"+ ".png"))
+
+
+def load_model(model_path_with_name):
+    model = torch.load(model_path_with_name)
+
+    return model
