@@ -18,11 +18,12 @@ class EnvironmentJPGDataset(Dataset):
         """
         self.environment_frame = np.load(img_npy_file, allow_pickle=True)
         self.labels = np.load(label_npy_file, allow_pickle=True)
+        assert len(self.environment_frame) == len(self.labels)
+
         self.transform = transform
         self.environment_frame = self.environment_frame.transpose((0, 3, 1, 2))
         self.environment_frame = torch.from_numpy(self.environment_frame) 
         self.labels = torch.from_numpy(self.labels)
-
         if model_type == 'f':
             self.environment_frame.float()
             self.labels.float()
