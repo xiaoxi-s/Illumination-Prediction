@@ -26,6 +26,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='train model')
     parser.add_argument('-opt', '--optimizer', type=str,
                     help='choose SGD or Adam', default='sgd')
+    parser.add_argument('-dp', '--data_path', type=str, help='path to folder containing data', default='data')
     parser.add_argument('-lr', '--learningrate', type=float, help='learning rate', default=0.0001)
     parser.add_argument('-mm', '--momentum', type=float, help='momentum for sgd', default=0.9)
     parser.add_argument('-b1', '--beta1', type=float, help='beta1 parameter for Adam', default=0.9)
@@ -47,6 +48,10 @@ if __name__ == '__main__':
     choice_of_optimizer = str.lower(str(args.optimizer))
     if choice_of_optimizer != 'sgd' and choice_of_optimizer != 'adam':
         raise TypeError('Optimizer Must be SGD or Adam')
+
+    # path
+    data_path = args.data_path
+
     # model param
     fine_tune = args.finetune
     N = args.N
@@ -75,10 +80,10 @@ if __name__ == '__main__':
     augmentation_param = (args.augmentation_row_num, args.augmentation_col_num)
     
     # dataset
-    train_ds = EnvironmentJPGDataset(os.path.join('data', 'train_feature_matrix.npy'), os.path.join('data', 'train_label.npy'),model_type,\
+    train_ds = EnvironmentJPGDataset(os.path.join(data_path, 'train_feature_matrix.npy'), os.path.join(data_path, 'train_label.npy'),model_type,\
         transform= transforms.Compose([transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
                                        , augmentation=augmentation_param)
-    test_ds = EnvironmentJPGDataset(os.path.join('data', 'test_feature_matrix.npy'), os.path.join('data', 'test_label.npy'),model_type,\
+    test_ds = EnvironmentJPGDataset(os.path.join(data_path, 'test_feature_matrix.npy'), os.path.join(data_path, 'test_label.npy'),model_type,\
         transform= transforms.Compose([transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
                                        , augmentation=augmentation_param)
     train_dataloader = DataLoader(train_ds, batch_size)
