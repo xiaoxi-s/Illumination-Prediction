@@ -45,6 +45,7 @@ if __name__ == '__main__':
     X = test_ds.environment_frame
     y = test_ds.labels
 
+    # size of X: (num of instances, channel num, height, width)
     # size of predicted y: (num of instances, N x num_of_parm)
     predicted_y = model(X)
     predicted_y = predicted_y.to('cpu').numpy()
