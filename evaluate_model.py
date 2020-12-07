@@ -48,10 +48,10 @@ if __name__ == '__main__':
     # size of X: (num of instances, channel num, height, width)
     # size of predicted y: (num of instances, N x num_of_parm)
     predicted_y = model(X)
-    predicted_y = predicted_y.to('cpu').numpy()
+    predicted_y = predicted_y.to('cpu')
 
     # ----------------------------------------------
     # Missing post processing
     # -----------------------------------------------
 
-    np.save(os.join(dest_path, 'predicted_y'), predicted_y)
+    torch.save(predicted_y, os.join(dest_path, 'predicted_y'))
