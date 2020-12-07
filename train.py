@@ -6,7 +6,7 @@ import torch
 import numpy as np
 
 
-def train_model(model, criterion, location_success_count, color_success_count, optimizer, scheduler, train_dataloader, test_dataloader, weights, num_epochs=25):
+def train_model(model, criterion, location_success_count, color_success_count, optimizer, scheduler, train_dataloader, test_dataloader, weights, N, num_of_param, num_epochs=25):
     since = time.time()
 
     best_model_wts = None
@@ -24,6 +24,8 @@ def train_model(model, criterion, location_success_count, color_success_count, o
 
     # weigths placed on the output (Ignore depth)
     weights = torch.tensor(weights).to(device)
+
+    print('Star training: N = {}, num_of_param = {}'.format(N, num_of_param))
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -54,10 +56,10 @@ def train_model(model, criterion, location_success_count, color_success_count, o
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs = model(inputs)
-                    outputs = torch.reshape(outputs, (-1, 3, 9))
+                    outputs = torch.reshape(outputs, (-1, N, num_of_param))
                     loss = criterion(outputs, labels, weights)
-                    running_location_corrects += int(location_success_count(outputs, labels))
-                    running_color_corrects += int(color_success_count(outputs, labels))
+                    running_location_corrects += int(location_success_count(outputs, labels, np.pi/18))
+                    running_color_corrects += int(color_success_count(outputs, labels, 1e-4))
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()
@@ -69,8 +71,8 @@ def train_model(model, criterion, location_success_count, color_success_count, o
                 scheduler.step()
 
             epoch_loss = float(running_loss / len(dataloader)/dataloader.batch_size)
-            epoch_location_acc = float(running_location_corrects / len(dataloader)/3/dataloader.batch_size)
-            epoch_color_acc = float(running_color_corrects / len(dataloader)/3/dataloader.batch_size)
+            epoch_location_acc = float(running_location_corrects / len(dataloader)/N/dataloader.batch_size)
+            epoch_color_acc = float(running_color_corrects / len(dataloader)/N/dataloader.batch_size)
 
             # record loss & acc during training
             if phase == 'train':

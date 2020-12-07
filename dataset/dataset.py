@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class EnvironmentJPGDataset(Dataset):
-    def __init__(self, img_npy_file, label_npy_file, transform=None, augmentation=None):
+    def __init__(self, img_npy_file, label_npy_file, model_type,transform=None, augmentation=None):
         """
         Args:
             img_npy_file (string): Path to the image npy file.
@@ -19,42 +19,23 @@ class EnvironmentJPGDataset(Dataset):
         self.environment_frame = np.load(img_npy_file, allow_pickle=True)
         self.labels = np.load(label_npy_file, allow_pickle=True)
         self.transform = transform
+        self.environment_frame = self.environment_frame.transpose((0, 3, 1, 2))
+        self.environment_frame = torch.from_numpy(self.environment_frame) 
+        self.labels = torch.from_numpy(self.labels)
 
+        if model_type == 'f':
+            self.environment_frame.float()
+            self.labels.float()
+        else:
+            self.environment_frame.double()
+            self.labels.double()
         size, height, width, channel = self.environment_frame.shape
         _, N, m = self.labels.shape
         ratio = None
 
-        # agumentation part
-        if augmentation is not None:
-            ratio = int(augmentation[0] * augmentation[1])
-            row_num = int(augmentation[0])
-            col_num = int(augmentation[1])
-
-            temp_env_frame = np.zeros((int(ratio * size), height//row_num, width//col_num, channel))
-            temp_labels = np.zeros((int(ratio * size), N, m))
-
-            # for each instance
-            for i in range(0, len(self.environment_frame)):
-                # seperate it into row_num * col_num sub-instances
-                for j in range(0, row_num):
-                    for k in range(0, col_num):
-
-                        temp_env_frame[int(ratio*i) + j*col_num + k] = self.environment_frame[i][ j*height//row_num : (j+1)*height//row_num, k*width//col_num:(k+1)*width//col_num, :]
-                        temp_labels[int(ratio*i) + j*col_num+k] = self.labels[i]
-
-            self.environment_frame = temp_env_frame
-            self.labels = temp_labels
-
         if self.transform:
-            size = len(self.environment_frame)
-            temp_env_frame = np.zeros((size, channel, height//row_num, width//col_num))
-            temp_labels = np.zeros((size, N, m))
-
             for i in range(0, len(self.environment_frame)):
-                temp_env_frame[i], temp_labels[i] = self.transform([self.environment_frame[i], self.labels[i]])
-
-            self.environment_frame = temp_env_frame
-            self.labels = temp_labels
+                self.environment_frame[i], self.labels[i] = self.transform([self.environment_frame[i], self.labels[i]])
 
     def __len__(self):
         return len(self.environment_frame)

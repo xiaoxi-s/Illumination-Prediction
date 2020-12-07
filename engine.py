@@ -37,9 +37,10 @@ if __name__ == '__main__':
     parser.add_argument('-epoch', '--epoch', type=int, help='training epoch', default = 50)
     parser.add_argument('-ag1', '--augmentation_row_num', type=int, help='number of rows for data augmentation', default=1)
     parser.add_argument('-ag2', '--augmentation_col_num', type=int, help='number of columns for data augmentation', default=1)
-    parser.add_argument('-ft', '--finetune', type=int, help='whether fix the feature extractor', default=1)
-    parser.add_argument('-n', '--N',type=int, help='num of light source', default=5)
+    parser.add_argument('-ft', '--finetune', type=int, help='whether fix the feature extractor', default=0)
+    parser.add_argument('-n', '--N',type=int, help='num of light source', default=6)
     parser.add_argument('-np', '--num_of_param',type=int, help='num of light source', default=5)
+    parser.add_argument('-tp', '--model_type', type=str, help='type of model', default='f')
     args = parser.parse_args()
 
     # args
@@ -54,6 +55,8 @@ if __name__ == '__main__':
         fine_tune = False
     else:
         fine_tune = True
+
+    model_type = args.model_type
 
     batch_size = args.batchsize
     epoch = args.epoch
@@ -72,22 +75,22 @@ if __name__ == '__main__':
     augmentation_param = (args.augmentation_row_num, args.augmentation_col_num)
     
     # dataset
-    train_ds = EnvironmentJPGDataset(os.path.join('data', 'train_feature_matrix.npy'), os.path.join('data', 'train_label.npy'),\
-        transform= transforms.Compose([
-                                       transformer.ToTensor(),
-                                       transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+    train_ds = EnvironmentJPGDataset(os.path.join('data', 'train_feature_matrix.npy'), os.path.join('data', 'train_label.npy'),model_type,\
+        transform= transforms.Compose([transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
                                        , augmentation=augmentation_param)
-    test_ds = EnvironmentJPGDataset(os.path.join('data', 'test_feature_matrix.npy'), os.path.join('data', 'test_label.npy'),\
-        transform= transforms.Compose([
-                                       transformer.ToTensor(),
-                                       transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+    test_ds = EnvironmentJPGDataset(os.path.join('data', 'test_feature_matrix.npy'), os.path.join('data', 'test_label.npy'),model_type,\
+        transform= transforms.Compose([transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
                                        , augmentation=augmentation_param)
     train_dataloader = DataLoader(train_ds, batch_size)
     test_dataloader = DataLoader(test_ds, batch_size)
 
     # model
     model = IlluminationPredictionNet(N = N, num_of_param = num_of_param, fine_tune = fine_tune)
-    model.double()
+    
+    if model_type == 'd':
+        model.double()
+    else:
+        model.float()
 
     # optimizer
     if optim == 'sgd':
@@ -96,12 +99,12 @@ if __name__ == '__main__':
         optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas=adam_beta, eps=adam_epsilon)
 
     scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.01)
-    weights = [20, 20, 0, 1, 1, 1, 1, 1, 1]
+    weights = [20, 20, 1, 1, 1]
     weights = torch.nn.functional.normalize(torch.Tensor(weights), dim = 0)
     # train
     model, train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch = train_model(
         model, average_difference_loss, location_success_count, color_success_count, \
-        optimizer, scheduler, train_dataloader, test_dataloader, weights, epoch)
+        optimizer, scheduler, train_dataloader, test_dataloader, weights, N, num_of_param, epoch)
 
     plot_loss_acc(train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch)
 
