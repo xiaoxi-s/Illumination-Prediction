@@ -81,13 +81,14 @@ class ToTensor(object):
 
 ''' Normalize Images in torch.tensor'''
 class CustomNormalize(object):
-    def __init__(self, mean, std):
+    def __init__(self, mean, std, scaling_factor=1):
         self.mean = torch.from_numpy(np.resize(mean, (3, 1, 1)))
         self.std = torch.from_numpy(np.resize(std, (3, 1, 1)))
-
+        self.scaling_factor = scaling_factor
+        
     def __call__(self, input):
         image, labels = input[0], input[1]
-        output = (image - self.mean) / self.std
+        output = (self.scaling_factor*image - self.mean) / self.std
 
         return output, labels
 
