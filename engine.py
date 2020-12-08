@@ -43,6 +43,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--N',type=int, help='num of light source', default=6)
     parser.add_argument('-np', '--num_of_param',type=int, help='num of light source', default=5)
     parser.add_argument('-tp', '--model_type', type=str, help='type of model', default='f')
+    parser.add_argument('-sf', '--scaling_factor', type=float, help='scaling factor for exr files', default=20)
     args = parser.parse_args()
 
     # args
@@ -71,6 +72,7 @@ if __name__ == '__main__':
         fine_tune = True
 
     model_type = args.model_type
+    scaling_factor = args.scaling_factor
 
     batch_size = args.batchsize
     epoch = args.epoch
@@ -90,10 +92,10 @@ if __name__ == '__main__':
     
     # dataset
     train_ds = EnvironmentJPGDataset(os.path.join(data_path, 'train_feature_matrix.npy'), os.path.join(data_path, 'train_label.npy'),model_type,\
-        transform= transforms.Compose([transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        transform= transforms.Compose([transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]), scaling_factor])
                                        , augmentation=augmentation_param)
     test_ds = EnvironmentJPGDataset(os.path.join(data_path, 'test_feature_matrix.npy'), os.path.join(data_path, 'test_label.npy'),model_type,\
-        transform= transforms.Compose([transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        transform= transforms.Compose([transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]), scaling_factor])
                                        , augmentation=augmentation_param)
     train_dataloader = DataLoader(train_ds, batch_size)
     test_dataloader = DataLoader(test_ds, batch_size)
@@ -113,8 +115,8 @@ if __name__ == '__main__':
         optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas=adam_beta, eps=adam_epsilon)
 
     scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.01)
-    weights = [1, 1, 20, 20, 20]
-    weights = torch.nn.functional.normalize(torch.Tensor(weights), dim = 0)
+    weights = [10, 10, 100, 100, 100]
+    #weights = torch.nn.functional.normalize(torch.Tensor(weights), dim = 0)
     # train
     model, train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch = train_model(
         model, average_difference_loss, location_success_count, color_success_count, \
