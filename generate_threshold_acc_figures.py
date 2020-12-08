@@ -121,6 +121,7 @@ if __name__ == '__main__':
     test_dataloader = DataLoader(test_ds, batch_size, shuffle=False)
 
     # load model
+    print("Model to be evaluated: {}".format(model_path_with_name))
     model = load_model(model_path_with_name)
     
     loc_thresh_vs_acc, color_thresh_vs_acc = evaluate(model, loc_thresh, color_thresh, test_dataloader, N, num_of_param, verbose)
