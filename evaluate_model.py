@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 from utils import load_model
 from dataset.postprocess import result_interpreter
-from dataset.dataset import EnvironmentJPGDataset
+from dataset.dataset import EnvironmentEXRDataset
 from torchvision import transforms
 
 if __name__ == '__main__':
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('-N', '--N', help='num of light sources', default=6)
     parser.add_argument('-np', '--num_of_param', help='num of param of each light source', default=5)
     parser.add_argument('-sf', '--scaling_factor', type=float, help='scaling factor for exr files', default=20)
-    
+
     args = parser.parse_args()
 
     model_path = args.model_path
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     model.eval()
 
     # dataset & dataloader (if needed)
-    test_ds = EnvironmentJPGDataset(os.path.join(dataset_path, 'test_feature_matrix.npy'), os.path.join(dataset_path, 'test_label.npy'),model_type,\
+    test_ds = EnvironmentEXRDataset(os.path.join(dataset_path, 'test_feature_matrix.npy'), os.path.join(dataset_path, 'test_label.npy'),model_type,\
         transform= transforms.Compose([transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]), scaling_factor])
                                        )
 

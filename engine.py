@@ -17,7 +17,7 @@ from torchvision import transforms
 
 from train import train_model
 from utils import plot_loss_acc
-from dataset.dataset import EnvironmentJPGDataset
+from dataset.dataset import EnvironmentEXRDataset
 from model.network import IlluminationPredictionNet
 from model.loss import average_difference_loss, cos_difference_loss
 from model.metric import location_success_count, color_success_count
@@ -91,10 +91,10 @@ if __name__ == '__main__':
     augmentation_param = (args.augmentation_row_num, args.augmentation_col_num)
     
     # dataset
-    train_ds = EnvironmentJPGDataset(os.path.join(data_path, 'train_feature_matrix.npy'), os.path.join(data_path, 'train_label.npy'),model_type,\
+    train_ds = EnvironmentEXRDataset(os.path.join(data_path, 'train_feature_matrix.npy'), os.path.join(data_path, 'train_label.npy'),model_type,\
         transform= transforms.Compose([transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]), scaling_factor])
                                        , augmentation=augmentation_param)
-    test_ds = EnvironmentJPGDataset(os.path.join(data_path, 'test_feature_matrix.npy'), os.path.join(data_path, 'test_label.npy'),model_type,\
+    test_ds = EnvironmentEXRDataset(os.path.join(data_path, 'test_feature_matrix.npy'), os.path.join(data_path, 'test_label.npy'),model_type,\
         transform= transforms.Compose([transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]), scaling_factor])
                                        , augmentation=augmentation_param)
     train_dataloader = DataLoader(train_ds, batch_size)
