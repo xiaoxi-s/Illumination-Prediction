@@ -19,7 +19,7 @@ from train import train_model
 from utils import plot_loss_acc
 from dataset.dataset import EnvironmentJPGDataset
 from model.network import IlluminationPredictionNet
-from model.loss import average_difference_loss
+from model.loss import average_difference_loss, cos_difference_loss
 from model.metric import location_success_count, color_success_count
 
 if __name__ == '__main__':
@@ -27,6 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('-opt', '--optimizer', type=str,
                     help='choose SGD or Adam', default='sgd')
     parser.add_argument('-dp', '--data_path', type=str, help='path to folder containing data', default='data')
+    parser.add_argument('-lf', '--loss_function', type=str, help='loss function used', default='avg')
     parser.add_argument('-lr', '--learningrate', type=float, help='learning rate', default=0.0001)
     parser.add_argument('-mm', '--momentum', type=float, help='momentum for sgd', default=0.9)
     parser.add_argument('-b1', '--beta1', type=float, help='beta1 parameter for Adam', default=0.9)
@@ -53,9 +54,17 @@ if __name__ == '__main__':
     data_path = args.data_path
 
     # model param
+    loss_function = args.loss_function
     fine_tune = args.finetune
     N = args.N
     num_of_param = args.num_of_param
+    if loss_function == 'avg':
+        loss_function = average_difference_loss
+    elif loss_function == 'cos':
+        loss_function = cos_difference_loss
+    else:
+        raise TypeError("Loss function restriction: avg or cos")
+    
     if fine_tune == 0:
         fine_tune = False
     else:
@@ -104,7 +113,7 @@ if __name__ == '__main__':
         optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas=adam_beta, eps=adam_epsilon)
 
     scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.01)
-    weights = [20, 20, 1, 1, 1]
+    weights = [1, 1, 20, 20, 20]
     weights = torch.nn.functional.normalize(torch.Tensor(weights), dim = 0)
     # train
     model, train_loss_epoch, train_acc_epoch, val_loss_epoch, val_acc_epoch = train_model(
