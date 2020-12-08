@@ -13,7 +13,7 @@ from datetime import datetime
 
 from utils import load_model
 from dataset.transformer import CustomNormalize
-from dataset.dataset import EnvironmentJPGDataset
+from dataset.dataset import EnvironmentEXRDataset
 from model.metric import location_success_count, color_success_count
 
 
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     color_thresh = np.linspace(color_thresh_start, color_thresh_end, num=color_thresh_num)
 
     # prepare dataset    
-    test_ds = EnvironmentJPGDataset(os.path.join(data_path, 'test_feature_matrix.npy'), os.path.join(data_path, 'test_label.npy'),\
+    test_ds = EnvironmentEXRDataset(os.path.join(data_path, 'test_feature_matrix.npy'), os.path.join(data_path, 'test_label.npy'),\
         transform= transforms.Compose([transformer.CustomNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]), model_type='f')
     test_dataloader = DataLoader(test_ds, batch_size, shuffle=False)
 
