@@ -68,7 +68,7 @@ def plot_threshold_and_accuracy(loc, acc):
     l1, = plt.plot(loc[:,0], loc[:, 1], color='blue')
     l2, = plt.plot(acc[:,0], acc[:, 1], color ='red')
     plt.legend(handles=[l1,l2],labels=['loc-acc','color-acc'],loc='best')
-    plt.title('Training and Validation Loss')
+    plt.title('Accuracy vs. Thresholds')
     plt.xlabel('param normalized to (0, 1]')
     plt.ylabel('accuracy')
     plt.savefig(os.path.join("figures", "sensitivity-analysis", datetime.now().strftime("%d-%m-%Y_%H-%M-%S") + "epoch-loss" + ".png"))
