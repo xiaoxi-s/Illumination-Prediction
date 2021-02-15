@@ -2,15 +2,8 @@
 
 # Description
 
-## Current Progress
+See this [page](https://xiaoxi-s.github.io/) for complete information.
 
-  - Finished Lableling jpeg images and exr files separately
-  - Build network
-  - Train Network
-
-## Next Step
-  - Determine the influence of accuracy measure
-  
 # Command line
 
 To patch dataset:
