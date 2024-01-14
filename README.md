@@ -2,7 +2,7 @@
 
 # Description
 
-See this [page](https://xiaoxi-s.github.io/) for complete information.
+See this [page](https://xiaoxi-s.github.io/Illumination-Prediction/) for complete information.
 
 # Command line
 
